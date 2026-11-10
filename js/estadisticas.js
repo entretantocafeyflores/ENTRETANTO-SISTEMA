@@ -11,7 +11,7 @@ const TURNOS = ["Desayuno", "Almuerzo", "Merienda", "Noche"];
 let filas = [], iniciado = false;
 
 const hoyAR = () => new Date().toLocaleDateString("en-CA", { timeZone: TZ });
-const sumarDias = (f, n) => { const d = new Date(f + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+export const sumarDias = (f, n) => { const d = new Date(f + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const diaDe = (iso) => new Date(iso).toLocaleDateString("en-CA", { timeZone: TZ });
 const turnoDe = (iso) => {
   const h = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: TZ }).format(new Date(iso)));
@@ -19,7 +19,7 @@ const turnoDe = (iso) => {
 };
 const fechaLinda = (f) => new Date(f + "T12:00:00Z").toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 
-function periodo(tipo) {
+export function periodo(tipo) {
   const hoy = hoyAR();
   if (tipo === "hoy") return [hoy, hoy];
   if (tipo === "semana") return [sumarDias(hoy, -((new Date(hoy + "T12:00:00Z").getUTCDay() + 6) % 7)), hoy];
