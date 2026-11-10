@@ -272,3 +272,10 @@ button:disabled:hover { background: transparent; }
   #comanda { box-shadow: none; padding: 0; background: #fff; }
   #ticket { max-width: 76mm; color: #000; }
 }
+
+/* ====== ESTADÍSTICAS ====== */
+.fechas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.lista-est { display: flex; flex-direction: column; gap: 8px; }
+.lista-est .item .num { align-items: center; font-size: 1.6rem; white-space: nowrap; }
+#estBuscar { width: 100%; margin-bottom: 10px; }
+#estBuscado { margin-bottom: 10px; }
