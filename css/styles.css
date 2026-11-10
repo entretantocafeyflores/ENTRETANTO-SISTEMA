@@ -291,3 +291,17 @@ button:disabled:hover { background: transparent; }
 .item.anulado { opacity: .6; background: transparent; border: 1.5px dashed var(--celeste); }
 .item.anulado .num { text-decoration: line-through; }
 .t-anulado { margin: 0; padding: 8px; text-align: center; border-radius: 14px; background: var(--dorado); font-family: var(--contenido); font-weight: 700; font-size: 1.4rem; }
+
+/* ====== BACKUP ====== */
+.nota { margin: 14px 0 0; color: var(--cafe-suave); font-size: .92rem; }
+#bkEstado { margin: 0 0 16px; }
+
+/* ====== IMPRESIÓN DE ESTADÍSTICAS ====== */
+.solo-print { display: none; }
+@media print {
+  .solo-print { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .solo-print .logo { width: 150px; margin: 0 auto; display: block; }
+  [data-vista="estadisticas"] .panel { box-shadow: none; background: #fff; padding: 0 0 14px; }
+  [data-vista="estadisticas"] .item { background: none; border-radius: 0; border-bottom: 1px solid #ccc; padding: 6px 0; break-inside: avoid; }
+  [data-vista="estadisticas"] h2:not(:first-child) { break-after: avoid; }
+}
