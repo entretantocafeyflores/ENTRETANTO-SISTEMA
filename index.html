@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Café · Gestión</title>
-<link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+<title>Entretanto · Gestión</title>
+<link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 </head>
@@ -12,6 +12,7 @@
 
 <main id="login" class="centro" hidden>
   <form id="loginForm" class="tarjeta">
+    <img class="logo" src="img/logo.png" alt="Entretanto Café y Flores">
     <h1>Ingresar</h1>
     <label>Email <input id="email" type="email" autocomplete="username" required></label>
     <label>Contraseña <input id="password" type="password" autocomplete="current-password" required></label>
@@ -21,9 +22,9 @@
 </main>
 
 <div id="app" hidden>
-  <header class="barra">
-    <strong>Café</strong>
-    <nav>
+  <aside class="lateral">
+    <img class="logo" src="img/logo.png" alt="Entretanto Café y Flores">
+    <nav aria-label="Módulos">
       <button class="tab activa">Productos</button>
       <button class="tab" disabled title="Próximamente">Mesas</button>
       <button class="tab" disabled title="Próximamente">Compras</button>
@@ -31,42 +32,49 @@
       <button class="tab" disabled title="Próximamente">Estadísticas</button>
     </nav>
     <button id="salir" class="link">Salir</button>
-  </header>
+  </aside>
 
-  <main class="contenido">
-    <section class="panel">
-      <h2>Categorías</h2>
-      <form id="catForm" class="fila">
-        <input id="catNombre" placeholder="Ej: Cafetería, Almuerzos" required>
-        <button>Agregar categoría</button>
-      </form>
+  <div class="principal-area">
+    <header class="encabezado">
+      <p>Carta y precios</p>
+      <h1>Productos</h1>
+    </header>
 
-      <h2 id="formTitulo">Nuevo producto</h2>
-      <form id="prodForm" class="grilla">
-        <input type="hidden" id="prodId">
-        <label>Nombre <input id="prodNombre" required></label>
-        <label>Precio <input id="prodPrecio" type="number" min="0" step="0.01" required></label>
-        <label>Categoría <select id="prodCat"></select></label>
-        <label>Tipo
-          <select id="prodTipo">
-            <option value="carta">Carta</option>
-            <option value="almuerzo">Almuerzo</option>
-            <option value="menu_del_dia">Menú del día</option>
-          </select>
-        </label>
-        <label class="check"><input id="prodActivo" type="checkbox" checked> A la venta</label>
-        <div class="fila">
-          <button class="principal">Guardar producto</button>
-          <button type="button" id="cancelar" class="link" hidden>Cancelar edición</button>
-        </div>
-      </form>
-    </section>
+    <main class="contenido">
+      <section class="panel">
+        <h2>Categorías</h2>
+        <form id="catForm" class="fila">
+          <input id="catNombre" placeholder="Ej: Cafetería, Almuerzos" required>
+          <button>Agregar categoría</button>
+        </form>
 
-    <section class="panel">
-      <h2>Productos</h2>
-      <div id="lista"></div>
-    </section>
-  </main>
+        <h2 id="formTitulo">Nuevo producto</h2>
+        <form id="prodForm" class="grilla">
+          <input type="hidden" id="prodId">
+          <label>Nombre <input id="prodNombre" required></label>
+          <label>Precio <input id="prodPrecio" type="number" min="0" step="0.01" required></label>
+          <label>Categoría <select id="prodCat"></select></label>
+          <label>Tipo
+            <select id="prodTipo">
+              <option value="carta">Carta</option>
+              <option value="almuerzo">Almuerzo</option>
+              <option value="menu_del_dia">Menú del día</option>
+            </select>
+          </label>
+          <label class="check"><input id="prodActivo" type="checkbox" checked> A la venta</label>
+          <div class="fila">
+            <button class="principal">Guardar producto</button>
+            <button type="button" id="cancelar" class="link" hidden>Cancelar edición</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Productos</h2>
+        <div id="lista"></div>
+      </section>
+    </main>
+  </div>
 </div>
 
 <p id="aviso" role="status"></p>
