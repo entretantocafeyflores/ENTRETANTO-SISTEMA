@@ -1,5 +1,6 @@
 import { db } from "./db.js";
 import { initProductos } from "./productos.js";
+import { initMesas } from "./mesas.js";
 
 const $ = (s) => document.querySelector(s);
 
@@ -12,7 +13,7 @@ const $ = (s) => document.querySelector(s);
 // El admin ve TODAS las solapas de esta lista automáticamente.
 const MODULOS = [
   { id: "productos",    nombre: "Productos",    init: initProductos },
-  { id: "mesas",        nombre: "Mesas" },
+  { id: "mesas",        nombre: "Mesas",        init: initMesas },
   { id: "compras",      nombre: "Compras" },
   { id: "costeo",       nombre: "Costeo" },
   { id: "estadisticas", nombre: "Estadísticas" },
