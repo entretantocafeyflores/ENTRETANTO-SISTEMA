@@ -36,7 +36,7 @@ async function cargar() {
   for (let pag = 0; ; pag++) {
     const { data, error } = await db.from("comandas")
       .select("id, abierta_at, cerrada_at, total, comensales, medio_pago, comanda_items(nombre, cantidad, precio_unitario)")
-      .eq("estado", "cerrada")
+      .eq("estado", "cerrada").is("anulada_at", null)
       .gte("cerrada_at", `${desde}T00:00:00-03:00`).lt("cerrada_at", `${sumarDias(hasta, 1)}T00:00:00-03:00`)
       .order("cerrada_at").range(pag * 1000, pag * 1000 + 999);
     if (error) { $("#estError").textContent = "No se pudieron leer las ventas: " + error.message; return; }
