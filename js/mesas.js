@@ -31,16 +31,18 @@ function panel(cual) {
 
 async function cargar() {
   const [m, c, p, a] = await Promise.all([
-    db.from("mesas").select("*").eq("activa", true).order("orden"),
+    db.from("mesas").select("*").eq("activa", true).order("id"),
     db.from("categorias").select("*").order("orden").order("nombre"),
     db.from("productos").select("*").eq("activo", true).order("nombre"),
-    db.from("comandas").select("id, mesa_id, comanda_items(precio, cantidad)").eq("estado", "abierta"),
+    db.from("comandas").select("id, mesa_id, comanda_items(precio_unitario, cantidad)").eq("estado", "abierta"),
   ]);
-  if (m.error || c.error || p.error || a.error) return aviso("No se pudo cargar. Revisá la conexión.");
-  mesas = m.data; cats = c.data; prods = p.data;
+  const fallos = [["mesas", m], ["categorías", c], ["productos", p], ["comandas", a]].filter(([, r]) => r.error);
+  $("#mesasError").textContent = fallos.map(([n, r]) => `No se pudo leer ${n}: ${r.error.message}`).join(" · ");
+  if (m.error) { $("#mesasGrid").innerHTML = ""; return; }
+  mesas = m.data; cats = c.data || []; prods = p.data || [];
   abiertas = {};
-  a.data.forEach((x) => {
-    abiertas[x.mesa_id] = { id: x.id, total: x.comanda_items.reduce((s, i) => s + i.precio * i.cantidad, 0) };
+  (a.data || []).forEach((x) => {
+    abiertas[x.mesa_id] = { id: x.id, total: x.comanda_items.reduce((s, i) => s + Number(i.precio_unitario) * Number(i.cantidad), 0) };
   });
   dibujarMesas();
 }
@@ -54,7 +56,7 @@ function dibujarMesas() {
 }
 
 async function abrirMesa(id) {
-  mesa = mesas.find((m) => m.id === id);
+  mesa = mesas.find((m) => String(m.id) === String(id));
   if (abiertas[id]) comandaId = abiertas[id].id;
   else {
     const { data, error } = await db.from("comandas").insert({ mesa_id: id }).select("id").single();
@@ -73,8 +75,8 @@ async function abrirMesa(id) {
 async function cargarItems() {
   const { data, error } = await db.from("comanda_items").select("*").eq("comanda_id", comandaId).order("creado_at");
   if (error) return aviso("No se pudo cargar la comanda.");
-  items = data;
-  abiertas[mesa.id] = { id: comandaId, total: items.reduce((s, i) => s + i.precio * i.cantidad, 0) };
+  items = data.map((i) => ({ ...i, cantidad: Number(i.cantidad), precio_unitario: Number(i.precio_unitario) }));
+  abiertas[mesa.id] = { id: comandaId, total: items.reduce((s, i) => s + i.precio_unitario * i.cantidad, 0) };
   dibujarComanda();
   dibujarMesas();
 }
@@ -87,7 +89,7 @@ function dibujarComanda() {
   $("#prods").innerHTML = prods.filter((p) => !catSel || String(p.categoria_id) === catSel).map((p) =>
     `<button class="prod" data-prod="${p.id}">${esc(p.nombre)}<small>${plata(p.precio)}</small></button>`).join("");
   $("#items").innerHTML = items.length
-    ? items.map((i) => `<div class="item"><div>${esc(i.nombre)}<small>${plata(i.precio)} c/u</small></div>
+    ? items.map((i) => `<div class="item"><div>${esc(i.nombre)}<small>${plata(i.precio_unitario)} c/u</small></div>
         <div class="cant"><button data-menos="${i.id}" aria-label="Quitar uno">−</button><b>${i.cantidad}</b><button data-mas="${i.id}" aria-label="Sumar uno">+</button></div></div>`).join("")
     : '<p class="vacio">Tocá un producto para sumarlo a la mesa.</p>';
   $("#total").textContent = plata(total);
@@ -108,7 +110,7 @@ function dibujarMover() {
 }
 
 function ajustarMover(id, delta) {
-  const it = items.find((i) => i.id === id);
+  const it = items.find((i) => String(i.id) === String(id));
   mov[id] = Math.max(0, Math.min(it.cantidad, (mov[id] || 0) + delta));
   dibujarMover();
 }
@@ -117,9 +119,9 @@ async function confirmarMover() {
   const lista = Object.entries(mov).filter(([, n]) => n > 0).map(([id, cantidad]) => ({ id, cantidad }));
   if (!lista.length) return aviso("Elegí qué productos pasar.");
   const destId = $("#destino").value;
-  const { error } = await db.rpc("mover_items", { p_origen: comandaId, p_mesa_destino: destId, p_items: lista });
+  const { error } = await db.rpc("mover_items", { p_origen: comandaId, p_mesa_destino: Number(destId), p_items: lista });
   if (error) return aviso("No se pudieron pasar los productos.");
-  const nombre = mesas.find((m) => m.id === destId).nombre;
+  const nombre = mesas.find((m) => String(m.id) === destId).nombre;
   await cargar();
   await abrirMesa(destId);
   aviso("Productos pasados a " + nombre);
@@ -127,16 +129,16 @@ async function confirmarMover() {
 
 async function sumar(prodId) {
   const p = prods.find((x) => String(x.id) === prodId);
-  const ex = items.find((i) => i.producto_id === prodId);
+  const ex = items.find((i) => String(i.producto_id) === prodId);
   const r = ex
     ? await db.from("comanda_items").update({ cantidad: ex.cantidad + 1 }).eq("id", ex.id)
-    : await db.from("comanda_items").insert({ comanda_id: comandaId, producto_id: prodId, nombre: p.nombre, precio: p.precio });
+    : await db.from("comanda_items").insert({ comanda_id: comandaId, producto_id: prodId, nombre: p.nombre, precio_unitario: p.precio });
   if (r.error) return aviso("No se pudo agregar.");
   cargarItems();
 }
 
 async function cambiar(id, delta) {
-  const it = items.find((i) => i.id === id);
+  const it = items.find((i) => String(i.id) === String(id));
   const r = it.cantidad + delta < 1
     ? await db.from("comanda_items").delete().eq("id", id)
     : await db.from("comanda_items").update({ cantidad: it.cantidad + delta }).eq("id", id);
@@ -160,7 +162,7 @@ function verTicket(c, partes) {
     <img class="logo" src="img/logo.png" alt="Entretanto Café y Flores">
     <p class="t-num">Ticket N° ${String(c.numero_ticket).padStart(6, "0")}</p>
     <p class="t-centro">${fecha} · ${esc(mesa.nombre)}</p>
-    <div class="t-lineas">${items.map((i) => `<div><span>${i.cantidad} × ${esc(i.nombre)}</span><span>${plata(i.precio * i.cantidad)}</span></div>`).join("")}</div>
+    <div class="t-lineas">${items.map((i) => `<div><span>${i.cantidad} × ${esc(i.nombre)}</span><span>${plata(i.precio_unitario * i.cantidad)}</span></div>`).join("")}</div>
     <div class="t-total"><span>Total</span><span>${plata(c.total)}</span></div>
     ${partes > 1 ? `<p class="t-centro">Dividido en ${partesTxt(c.total, partes)}</p>` : ""}
     <p class="t-centro">${c.comensales} ${c.comensales === 1 ? "comensal" : "comensales"} · Pago: ${esc(c.medio_pago)}</p>
