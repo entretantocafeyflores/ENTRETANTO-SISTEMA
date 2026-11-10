@@ -32,17 +32,11 @@
 <div id="app" hidden>
   <aside class="lateral">
     <img class="logo" src="img/logo.png" alt="Entretanto Café y Flores">
-    <nav aria-label="Módulos">
-      <button class="tab activa">Productos</button>
-      <button class="tab" disabled title="Próximamente">Mesas</button>
-      <button class="tab" disabled title="Próximamente">Compras</button>
-      <button class="tab" disabled title="Próximamente">Costeo</button>
-      <button class="tab" disabled title="Próximamente">Estadísticas</button>
-    </nav>
+    <nav id="menu" aria-label="Módulos"></nav>
     <button id="salir" class="link">Salir</button>
   </aside>
 
-  <div class="principal-area">
+  <div class="principal-area" data-vista="productos" hidden>
     <header class="encabezado">
       <p>Carta y precios</p>
       <h1>Productos</h1>
@@ -80,6 +74,18 @@
       <section class="panel">
         <h2>Productos</h2>
         <div id="lista"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="principal-area" data-vista="sinacceso" hidden>
+    <header class="encabezado">
+      <p>Entretanto</p>
+      <h1>Todavía no hay nada acá</h1>
+    </header>
+    <main class="contenido">
+      <section class="panel">
+        <p class="vacio">Tu usuario todavía no tiene pantallas habilitadas. Pedile a un administrador que te dé acceso.</p>
       </section>
     </main>
   </div>
