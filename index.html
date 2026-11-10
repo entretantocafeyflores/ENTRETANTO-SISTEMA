@@ -78,6 +78,57 @@
     </main>
   </div>
 
+  <div class="principal-area" data-vista="mesas" hidden>
+    <header class="encabezado">
+      <p>Salón</p>
+      <h1>Mesas</h1>
+    </header>
+
+    <main class="contenido">
+      <section class="panel" id="panelMesas">
+        <h2>Elegí una mesa</h2>
+        <div id="mesasGrid" class="mesas-grid"></div>
+      </section>
+
+      <section class="panel" id="comanda">
+        <p id="comandaVacio" class="vacio">Elegí una mesa para tomar el pedido.</p>
+
+        <div id="comandaEdit" hidden>
+          <h2 id="comandaTitulo"></h2>
+          <div id="chips" class="chips"></div>
+          <div id="prods" class="prods"></div>
+
+          <h2 class="subtitulo">Pedido</h2>
+          <div id="items"></div>
+          <button id="pasar" class="link" hidden>Pasar productos a otra mesa</button>
+          <div id="moverBox" class="cierre" hidden>
+            <h3>Pasar a otra mesa</h3>
+            <div id="moverItems"></div>
+            <label>Mesa de destino <select id="destino"></select></label>
+            <div class="fila">
+              <button id="moverOk" class="principal">Pasar productos</button>
+              <button id="moverNo" class="link">Cancelar</button>
+            </div>
+          </div>
+          <div class="total"><span>Total</span><span id="total"></span></div>
+
+          <div id="cerrarBox" class="cierre">
+            <div class="dos">
+              <label>Comensales <input id="comensales" type="number" inputmode="numeric" min="1" required></label>
+              <label>Dividir en partes <input id="partes" type="number" inputmode="numeric" min="1" value="1"></label>
+            </div>
+            <p id="partesInfo" class="t-centro"></p>
+            <label>Medio de pago <select id="medio"></select></label>
+            <button id="cerrar" class="principal">Cerrar mesa y emitir ticket</button>
+          </div>
+          <button id="liberar" class="link" hidden>Liberar mesa</button>
+        </div>
+
+        <div id="ticket" hidden></div>
+      </section>
+    </main>
+  </div>
+
   <div class="principal-area" data-vista="sinacceso" hidden>
     <header class="encabezado">
       <p>Entretanto</p>
