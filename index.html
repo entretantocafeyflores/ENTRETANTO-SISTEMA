@@ -15,6 +15,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -138,6 +139,12 @@
 
     <main class="contenido">
       <section class="panel">
+        <div class="solo-print">
+          <img class="logo" src="img/logo.png" alt="Entretanto Café y Flores">
+          <p class="t-num">Estadísticas</p>
+          <p id="estPeriodoPrint" class="t-centro"></p>
+        </div>
+        <div class="no-print">
         <h2>Período</h2>
         <div id="estChips" class="chips">
           <button class="chip" data-per="hoy">Hoy</button>
@@ -150,6 +157,11 @@
           <label>Hasta <input id="estHasta" type="date"></label>
         </div>
         <p id="estError" class="error" role="alert"></p>
+        <div class="fila">
+          <button id="estImprimir" class="principal">Imprimir</button>
+          <button id="estExcel">Descargar Excel</button>
+        </div>
+        </div>
         <h2>Resumen</h2>
         <div id="estResumen" class="lista-est"></div>
       </section>
@@ -162,7 +174,7 @@
         <h2>Medios de pago</h2>
         <div id="estMedios" class="lista-est"></div>
         <h2>Productos vendidos</h2>
-        <input id="estBuscar" type="search" placeholder="Buscá un producto: agua, café, tostado...">
+        <input id="estBuscar" class="no-print" type="search" placeholder="Buscá un producto: agua, café, tostado...">
         <p id="estBuscado" class="t-centro"></p>
         <div id="estProductos" class="lista-est"></div>
       </section>
@@ -197,6 +209,32 @@
       <section class="panel" id="histDetalle">
         <p id="histVacio" class="vacio">Elegí un ticket para ver el detalle y reimprimirlo.</p>
         <div id="histTicket" hidden></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="principal-area" data-vista="backup" hidden>
+    <header class="encabezado">
+      <p>Tus datos</p>
+      <h1>Backup</h1>
+    </header>
+
+    <main class="contenido">
+      <section class="panel">
+        <h2>Copia de seguridad</h2>
+        <p id="bkEstado"></p>
+        <div class="cierre">
+          <button id="bkCompleta" class="principal">Descargar copia completa</button>
+          <button id="bkVentas">Descargar ventas para Excel</button>
+        </div>
+        <p class="nota">La copia completa guarda todo en un archivo que podés conservar: ventas, productos, precios, mesas y usuarios. Guardala en tu Google Drive o mandátela por mail, y hacela seguido (por ejemplo, una vez por semana).</p>
+        <p class="nota">Las ventas en Excel sirven para revisar o trabajar en planillas. No reemplazan a la copia completa.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Qué se guarda</h2>
+        <div id="bkLista" class="lista-est"></div>
+        <p class="nota">Las contraseñas y los emails de los usuarios no se incluyen: los guarda Supabase por separado.</p>
       </section>
     </main>
   </div>
