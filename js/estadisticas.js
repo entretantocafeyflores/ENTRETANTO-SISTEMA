@@ -8,7 +8,7 @@ const sinTildes = (t) => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, 
 
 const TZ = "America/Argentina/Buenos_Aires";
 const TURNOS = ["Desayuno", "Almuerzo", "Merienda", "Noche"];
-let filas = [], iniciado = false;
+let filas = [], agg = null, iniciado = false;
 
 const hoyAR = () => new Date().toLocaleDateString("en-CA", { timeZone: TZ });
 export const sumarDias = (f, n) => { const d = new Date(f + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -81,6 +81,9 @@ function dibujar() {
     });
   });
 
+  agg = { desde: $("#estDesde").value, hasta: $("#estHasta").value, ventas, comen, n: filas.length, turnos, dias, medios, prods };
+  $("#estPeriodoPrint").textContent = `Del ${fechaLinda(agg.desde)} al ${fechaLinda(agg.hasta)}`;
+
   lista("#estTurnos", filas.length ? TURNOS.map((t) =>
     fila(t, `${turnos[t].mesas} mesas · ${plata(turnos[t].ventas)}`, num(turnos[t].com))) : [], sin);
 
@@ -101,6 +104,39 @@ function dibujar() {
     q ? "Ningún producto coincide con esa búsqueda." : sin);
 }
 
+function aviso(texto) {
+  const el = $("#aviso");
+  el.textContent = texto;
+  el.classList.add("ver");
+  setTimeout(() => el.classList.remove("ver"), 3500);
+}
+
+function excel() {
+  if (!window.XLSX) return aviso("No se pudo cargar el generador de Excel. Revisá la conexión.");
+  if (!agg || !agg.n) return aviso("No hay datos para descargar en este período.");
+  const X = window.XLSX, wb = X.utils.book_new();
+  const hoja = (nombre, datos, anchos) => {
+    const ws = X.utils.aoa_to_sheet(datos);
+    ws["!cols"] = anchos.map((w) => ({ wch: w }));
+    X.utils.book_append_sheet(wb, ws, nombre);
+  };
+  hoja("Resumen", [
+    ["Período", `${fechaLinda(agg.desde)} al ${fechaLinda(agg.hasta)}`],
+    ["Ventas", agg.ventas], ["Mesas cerradas", agg.n], ["Comensales", agg.comen],
+    ["Ticket promedio", agg.ventas / agg.n], ["Gasto por comensal", agg.comen ? agg.ventas / agg.comen : ""],
+  ], [22, 30]);
+  hoja("Turnos", [["Turno", "Mesas", "Comensales", "Ventas"],
+    ...TURNOS.map((t) => [t, agg.turnos[t].mesas, agg.turnos[t].com, agg.turnos[t].ventas])], [14, 10, 12, 14]);
+  hoja("Días", [["Fecha", ...TURNOS, "Comensales", "Ventas"],
+    ...Object.keys(agg.dias).sort().map((d) => [fechaLinda(d), ...TURNOS.map((t) => agg.dias[d].t[t] || 0), agg.dias[d].com, agg.dias[d].ventas])],
+    [18, 12, 12, 12, 12, 12, 14]);
+  hoja("Medios de pago", [["Medio", "Mesas", "Ventas"],
+    ...Object.entries(agg.medios).sort((a, b) => b[1].ventas - a[1].ventas).map(([n, m]) => [n, m.mesas, m.ventas])], [22, 10, 14]);
+  hoja("Productos", [["Producto", "Unidades", "Ventas"],
+    ...Object.entries(agg.prods).sort((a, b) => b[1].cant - a[1].cant).map(([n, p]) => [n, p.cant, p.ventas])], [36, 10, 14]);
+  X.writeFile(wb, `entretanto-estadisticas-${agg.desde}_a_${agg.hasta}.xlsx`);
+}
+
 function elegir(tipo) {
   const [d, h] = periodo(tipo);
   $("#estDesde").value = d; $("#estHasta").value = h;
@@ -117,6 +153,8 @@ export function initEstadisticas() {
       cargar();
     }));
     $("#estBuscar").addEventListener("input", dibujar);
+    $("#estImprimir").addEventListener("click", () => window.print());
+    $("#estExcel").addEventListener("click", excel);
   }
   elegir("mes");
 }

@@ -3,6 +3,7 @@ import { initProductos } from "./productos.js";
 import { initMesas } from "./mesas.js";
 import { initEstadisticas } from "./estadisticas.js";
 import { initHistorial } from "./historial.js";
+import { initBackup } from "./backup.js";
 
 const $ = (s) => document.querySelector(s);
 
@@ -20,6 +21,7 @@ const MODULOS = [
   { id: "compras",      nombre: "Compras" },
   { id: "costeo",       nombre: "Costeo" },
   { id: "estadisticas", nombre: "Estadísticas", init: initEstadisticas },
+  { id: "backup",       nombre: "Backup",       init: initBackup },
 ];
 
 let usuarioActual = null;
