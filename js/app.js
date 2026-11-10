@@ -1,6 +1,7 @@
 import { db } from "./db.js";
 import { initProductos } from "./productos.js";
 import { initMesas } from "./mesas.js";
+import { initEstadisticas } from "./estadisticas.js";
 
 const $ = (s) => document.querySelector(s);
 
@@ -16,7 +17,7 @@ const MODULOS = [
   { id: "mesas",        nombre: "Mesas",        init: initMesas },
   { id: "compras",      nombre: "Compras" },
   { id: "costeo",       nombre: "Costeo" },
-  { id: "estadisticas", nombre: "Estadísticas" },
+  { id: "estadisticas", nombre: "Estadísticas", init: initEstadisticas },
 ];
 
 let usuarioActual = null;
