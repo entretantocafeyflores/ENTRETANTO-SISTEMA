@@ -220,3 +220,55 @@ button:disabled:hover { background: transparent; }
 }
 @media (max-width: 480px) { .grilla { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ====== MESAS Y COMANDA ====== */
+.mesas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.mesa {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-height: 92px; border-radius: var(--radio); background: var(--hueso); border: 1.5px solid var(--arena);
+  font-family: var(--contenido); font-weight: 700; font-size: 1.5rem; line-height: 1.1;
+}
+.mesa small { font-family: var(--ui); font-weight: 500; font-size: .8rem; color: var(--cafe-suave); }
+.mesa:hover { background: var(--arena); }
+.mesa.ocupada { background: var(--cafe); border-color: var(--cafe); color: var(--hueso); }
+.mesa.ocupada small { color: var(--dorado); }
+.mesa.sel { box-shadow: 0 0 0 3px var(--dorado); }
+
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; }
+.chip { flex: none; min-height: 40px; padding: 6px 16px; font-size: .9rem; background: var(--hueso); }
+.chip.activa { background: var(--dorado); }
+.prods { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.prod {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+  min-height: 72px; padding: 12px 14px; border-radius: 16px; background: var(--hueso);
+  font-family: var(--contenido); font-weight: 700; font-size: 1.15rem; line-height: 1.15;
+}
+.prod small { font-family: var(--ui); font-weight: 500; font-size: .82rem; color: var(--cafe-suave); }
+.prod:hover { background: var(--arena); }
+.cant { align-items: center; }
+.cant b { min-width: 26px; text-align: center; }
+.cant button { min-width: 40px; padding: 6px 0; font-size: 1.2rem; }
+.total { display: flex; justify-content: space-between; margin: 18px 0 14px; font-family: var(--contenido); font-weight: 700; font-size: 1.9rem; }
+.cierre { display: flex; flex-direction: column; gap: 12px; }
+.cierre .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#moverItems { display: flex; flex-direction: column; gap: 8px; }
+#comandaEdit h2 + .chips { margin-top: 0; }
+#comandaEdit .subtitulo { margin-top: 22px; }
+
+/* Ticket (pantalla e impresión) */
+#ticket { max-width: 340px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+#ticket .logo { width: 150px; margin: 0 auto; display: block; }
+.t-num { margin: 0; text-align: center; font-family: var(--contenido); font-weight: 700; font-size: 1.6rem; }
+.t-centro { margin: 0; text-align: center; font-size: .9rem; color: var(--cafe-suave); }
+.t-lineas { border-top: 1px dashed var(--gris); border-bottom: 1px dashed var(--gris); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+.t-lineas div, .t-total { display: flex; justify-content: space-between; gap: 12px; }
+.t-total { font-family: var(--contenido); font-weight: 700; font-size: 1.6rem; }
+.t-legal { margin: 0; text-align: center; font-size: .8rem; font-weight: 600; }
+
+@media print {
+  .lateral, .encabezado, #panelMesas, #comandaEdit, #comandaVacio, #aviso, .no-print { display: none !important; }
+  body, .centro { background: #fff; }
+  #app:not([hidden]), .contenido { display: block; padding: 0; }
+  #comanda { box-shadow: none; padding: 0; background: #fff; }
+  #ticket { max-width: 76mm; color: #000; }
+}
