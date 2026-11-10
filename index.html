@@ -169,6 +169,38 @@
     </main>
   </div>
 
+  <div class="principal-area" data-vista="historial" hidden>
+    <header class="encabezado">
+      <p>Mesas cerradas</p>
+      <h1>Historial</h1>
+    </header>
+
+    <main class="contenido">
+      <section class="panel" id="panelHist">
+        <h2>Tickets</h2>
+        <div id="histChips" class="chips">
+          <button class="chip" data-per="hoy">Hoy</button>
+          <button class="chip" data-per="semana">Esta semana</button>
+          <button class="chip" data-per="mes">Este mes</button>
+          <button class="chip" data-per="pasado">Mes pasado</button>
+        </div>
+        <div class="fechas">
+          <label>Desde <input id="histDesde" type="date"></label>
+          <label>Hasta <input id="histHasta" type="date"></label>
+        </div>
+        <p id="histError" class="error" role="alert"></p>
+        <input id="histBuscar" type="search" placeholder="Buscá por N° de ticket o por mesa">
+        <p id="histNota" class="t-centro"></p>
+        <div id="histLista" class="lista-est"></div>
+      </section>
+
+      <section class="panel" id="histDetalle">
+        <p id="histVacio" class="vacio">Elegí un ticket para ver el detalle y reimprimirlo.</p>
+        <div id="histTicket" hidden></div>
+      </section>
+    </main>
+  </div>
+
   <div class="principal-area" data-vista="sinacceso" hidden>
     <header class="encabezado">
       <p>Entretanto</p>
