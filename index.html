@@ -130,6 +130,45 @@
     </main>
   </div>
 
+  <div class="principal-area" data-vista="estadisticas" hidden>
+    <header class="encabezado">
+      <p>Resultados</p>
+      <h1>Estadísticas</h1>
+    </header>
+
+    <main class="contenido">
+      <section class="panel">
+        <h2>Período</h2>
+        <div id="estChips" class="chips">
+          <button class="chip" data-per="hoy">Hoy</button>
+          <button class="chip" data-per="semana">Esta semana</button>
+          <button class="chip" data-per="mes">Este mes</button>
+          <button class="chip" data-per="pasado">Mes pasado</button>
+        </div>
+        <div class="fechas">
+          <label>Desde <input id="estDesde" type="date"></label>
+          <label>Hasta <input id="estHasta" type="date"></label>
+        </div>
+        <p id="estError" class="error" role="alert"></p>
+        <h2>Resumen</h2>
+        <div id="estResumen" class="lista-est"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Comensales por turno</h2>
+        <div id="estTurnos" class="lista-est"></div>
+        <h2>Día por día</h2>
+        <div id="estDias" class="lista-est"></div>
+        <h2>Medios de pago</h2>
+        <div id="estMedios" class="lista-est"></div>
+        <h2>Productos vendidos</h2>
+        <input id="estBuscar" type="search" placeholder="Buscá un producto: agua, café, tostado...">
+        <p id="estBuscado" class="t-centro"></p>
+        <div id="estProductos" class="lista-est"></div>
+      </section>
+    </main>
+  </div>
+
   <div class="principal-area" data-vista="sinacceso" hidden>
     <header class="encabezado">
       <p>Entretanto</p>
