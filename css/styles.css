@@ -266,11 +266,12 @@ button:disabled:hover { background: transparent; }
 .t-legal { margin: 0; text-align: center; font-size: .8rem; font-weight: 600; }
 
 @media print {
-  .lateral, .encabezado, #panelMesas, #comandaEdit, #comandaVacio, #aviso, .no-print { display: none !important; }
+  .lateral, .encabezado, #panelMesas, #panelHist, #histVacio, #comandaEdit, #comandaVacio, #aviso, .no-print { display: none !important; }
   body, .centro { background: #fff; }
   #app:not([hidden]), .contenido { display: block; padding: 0; }
   #comanda { box-shadow: none; padding: 0; background: #fff; }
-  #ticket { max-width: 76mm; color: #000; }
+  #ticket, #histTicket { max-width: 76mm; color: #000; }
+  #histDetalle { box-shadow: none; padding: 0; background: #fff; }
 }
 
 /* ====== ESTADÍSTICAS ====== */
@@ -279,3 +280,11 @@ button:disabled:hover { background: transparent; }
 .lista-est .item .num { align-items: center; font-size: 1.6rem; white-space: nowrap; }
 #estBuscar { width: 100%; margin-bottom: 10px; }
 #estBuscado { margin-bottom: 10px; }
+
+/* ====== HISTORIAL ====== */
+#histBuscar { width: 100%; margin: 14px 0 10px; }
+#histTicket { max-width: 340px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+#histTicket .logo { width: 150px; margin: 0 auto; display: block; }
+.item[data-ticket] { cursor: pointer; }
+.item[data-ticket]:hover { background: var(--arena); }
+.item.sel { box-shadow: 0 0 0 3px var(--dorado); }
