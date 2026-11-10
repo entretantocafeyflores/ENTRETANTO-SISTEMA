@@ -288,3 +288,6 @@ button:disabled:hover { background: transparent; }
 .item[data-ticket] { cursor: pointer; }
 .item[data-ticket]:hover { background: var(--arena); }
 .item.sel { box-shadow: 0 0 0 3px var(--dorado); }
+.item.anulado { opacity: .6; background: transparent; border: 1.5px dashed var(--celeste); }
+.item.anulado .num { text-decoration: line-through; }
+.t-anulado { margin: 0; padding: 8px; text-align: center; border-radius: 14px; background: var(--dorado); font-family: var(--contenido); font-weight: 700; font-size: 1.4rem; }
