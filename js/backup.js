@@ -6,7 +6,7 @@ const num = (n) => Number(n).toLocaleString("es-AR");
 const TZ = "America/Argentina/Buenos_Aires";
 const CLAVE = "entretanto_ultimo_backup";
 
-// Si más adelante se suman tablas (compras, costeo...), agregarlas acá para que entren en la copia.
+// Si más adelante se suman tablas (costeo...), agregarlas acá para que entren en la copia.
 const TABLAS = [
   { n: "perfiles", t: "Usuarios y roles", id: true },
   { n: "roles_modulos", t: "Permisos por rol", id: false },
@@ -15,6 +15,10 @@ const TABLAS = [
   { n: "mesas", t: "Mesas", id: true },
   { n: "comandas", t: "Tickets y comandas", id: true },
   { n: "comanda_items", t: "Productos de cada ticket", id: true },
+  { n: "proveedores", t: "Proveedores", id: true },
+  { n: "insumos", t: "Insumos, precios y stock", id: true },
+  { n: "facturas", t: "Facturas de proveedores", id: true },
+  { n: "factura_items", t: "Renglones de cada factura", id: true },
 ];
 
 function aviso(texto) {
