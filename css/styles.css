@@ -305,3 +305,34 @@ button:disabled:hover { background: transparent; }
   [data-vista="estadisticas"] .item { background: none; border-radius: 0; border-bottom: 1px solid #ccc; padding: 6px 0; break-inside: avoid; }
   [data-vista="estadisticas"] h2:not(:first-child) { break-after: avoid; }
 }
+
+/* ====== COMPRAS ====== */
+.contenido.una { grid-template-columns: minmax(0, 1fr); max-width: 980px; }
+.grilla2 { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin-bottom: 14px; }
+.grilla2 .ancho { grid-column: 1 / -1; }
+.grilla2.bloque { margin-top: 14px; align-items: end; }
+#cfForm h3.sub { margin: 22px 0 10px; }
+.items-fact { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+.linea { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); background: var(--hueso); border-radius: 16px; padding: 14px; }
+.linea .l-desc { grid-column: 1 / -1; }
+.linea .l-sub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-size: .95rem; }
+.linea .l-sub b { font-family: var(--contenido); font-size: 1.3rem; }
+.linea .dudoso { background: var(--dorado); padding: 2px 10px; border-radius: 10px; font-size: .85rem; font-weight: 600; }
+.linea > button { grid-column: 1 / -1; justify-self: start; min-height: 36px; }
+#facBuscar, #iBuscar { width: 100%; margin-bottom: 12px; }
+#facDetalle { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--arena); }
+#facDetalle h2 { margin-bottom: 4px; }
+.foto-fact { display: block; max-width: 100%; margin-top: 16px; border-radius: 16px; border: 1.5px solid var(--arena); }
+.co-lista .item { flex-wrap: wrap; }
+.co-lista .item > div:last-child { flex-wrap: wrap; align-items: center; justify-content: flex-end; }
+.co-lista .item .num { display: flex; gap: 10px; }
+.item.urgente { background: var(--dorado); }
+.item.pronto { box-shadow: inset 5px 0 0 var(--dorado); }
+.item.urgente small { color: var(--cafe); }
+.mini { width: 130px; min-height: 40px; padding: 6px 12px; }
+.item-wrap { display: flex; flex-direction: column; gap: 4px; }
+.hist { margin: 0 8px 8px; padding: 8px 14px; border-left: 3px solid var(--dorado); font-size: .9rem; }
+.hist div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 3px 0; }
+.insignia { margin-left: auto; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--cafe); color: var(--hueso); font-size: .78rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+#aviso { max-width: 92vw; text-align: center; }
+@media print { [data-vista="compras"] { display: none !important; } }
