@@ -4,6 +4,8 @@ const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const plata = (n) => "$ " + Number(n).toLocaleString("es-AR", { maximumFractionDigits: 2 });
 const MEDIOS = ["Efectivo", "Débito", "Crédito", "Transferencia / QR"];
+const DESC_EFECTIVO = 10; // % de descuento en efectivo: tiene que coincidir con el del script SQL (0.10)
+const descuentoDe = (total, medio) => (medio === "Efectivo" ? Math.round(total * DESC_EFECTIVO) / 100 : 0);
 
 let mesas = [], cats = [], prods = [], abiertas = {}, items = [];
 let mesa = null, comandaId = null, catSel = "", iniciado = false;
@@ -14,6 +16,14 @@ function partesTxt(total, n) {
   const base = Math.floor((total * 100) / n) / 100;
   const ultima = Math.round((total - base * (n - 1)) * 100) / 100;
   return ultima === base ? `${n} partes de ${plata(base)}` : `${n - 1} partes de ${plata(base)} y 1 de ${plata(ultima)}`;
+}
+
+function actualizarCobro() {
+  if (!mesa || !abiertas[mesa.id]) return;
+  const total = abiertas[mesa.id].total, d = descuentoDe(total, $("#medio").value);
+  $("#descInfo").hidden = !d;
+  $("#descInfo").textContent = d ? `Efectivo: ${DESC_EFECTIVO}% de descuento (− ${plata(d)}). Total a cobrar: ${plata(total - d)}` : "";
+  $("#partesInfo").textContent = partesTxt(total - d, Number($("#partes").value) || 1);
 }
 
 function aviso(texto) {
@@ -93,7 +103,7 @@ function dibujarComanda() {
         <div class="cant"><button data-menos="${i.id}" aria-label="Quitar uno">−</button><b>${i.cantidad}</b><button data-mas="${i.id}" aria-label="Sumar uno">+</button></div></div>`).join("")
     : '<p class="vacio">Tocá un producto para sumarlo a la mesa.</p>';
   $("#total").textContent = plata(total);
-  $("#partesInfo").textContent = partesTxt(total, Number($("#partes").value) || 1);
+  actualizarCobro();
   $("#items").hidden = moviendo;
   $("#pasar").hidden = !items.length || moviendo;
   $("#moverBox").hidden = !moviendo;
@@ -149,20 +159,22 @@ async function cambiar(id, delta) {
 async function cerrar() {
   const comensales = parseInt($("#comensales").value, 10);
   if (!(comensales >= 1)) return aviso("Indicá cuántos comensales había.");
-  const { data, error } = await db.rpc("cerrar_comanda", { p_id: comandaId, p_medio: $("#medio").value, p_comensales: comensales });
-  if (error || !data) return aviso("No se pudo cerrar la mesa.");
+  const { data, error } = await db.rpc("cerrar_comanda_con_descuento", { p_id: comandaId, p_medio: $("#medio").value, p_comensales: comensales });
+  if (error || !data) return aviso(error && error.code === "PGRST202" ? "Falta ejecutar el script del descuento en Supabase." : "No se pudo cerrar la mesa.");
   delete abiertas[mesa.id];
   dibujarMesas();
   verTicket(data, Math.max(1, parseInt($("#partes").value, 10) || 1));
 }
 
 function verTicket(c, partes) {
+  const desc = Number(c.descuento || 0), bruto = Number(c.total) + desc;
   const fecha = new Date(c.cerrada_at).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
   $("#ticket").innerHTML = `
     <img class="logo" src="img/logo.png" alt="Entretanto Café y Flores">
     <p class="t-num">Ticket N° ${String(c.numero_ticket).padStart(6, "0")}</p>
     <p class="t-centro">${fecha} · ${esc(mesa.nombre)}</p>
     <div class="t-lineas">${items.map((i) => `<div><span>${i.cantidad} × ${esc(i.nombre)}</span><span>${plata(i.precio_unitario * i.cantidad)}</span></div>`).join("")}</div>
+    ${desc > 0 ? `<div class="t-lineas"><div><span>Subtotal</span><span>${plata(bruto)}</span></div><div><span>Descuento efectivo ${Math.round((desc / bruto) * 100)}%</span><span>− ${plata(desc)}</span></div></div>` : ""}
     <div class="t-total"><span>Total</span><span>${plata(c.total)}</span></div>
     ${partes > 1 ? `<p class="t-centro">Dividido en ${partesTxt(c.total, partes)}</p>` : ""}
     <p class="t-centro">${c.comensales} ${c.comensales === 1 ? "comensal" : "comensales"} · Pago: ${esc(c.medio_pago)}</p>
@@ -185,9 +197,8 @@ export function initMesas() {
     if (b) abrirMesa(b.dataset.mesa);
   });
 
-  $("#partes").addEventListener("input", () => {
-    $("#partesInfo").textContent = partesTxt(abiertas[mesa.id].total, Number($("#partes").value) || 1);
-  });
+  $("#partes").addEventListener("input", actualizarCobro);
+  $("#medio").addEventListener("change", actualizarCobro);
 
   $("#comanda").addEventListener("click", async (e) => {
     const b = e.target.closest("button");

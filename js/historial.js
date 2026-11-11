@@ -25,7 +25,7 @@ async function cargar() {
   if (!desde || !hasta || desde > hasta) { $("#histError").textContent = "Revisá las fechas: la de inicio tiene que ser anterior a la final."; return; }
   const [c, m] = await Promise.all([
     db.from("comandas")
-      .select("id, mesa_id, numero_ticket, abierta_at, cerrada_at, total, comensales, medio_pago, anulada_at, motivo_anulacion, comanda_items(nombre, cantidad, precio_unitario)")
+      .select("id, mesa_id, numero_ticket, abierta_at, cerrada_at, total, descuento, comensales, medio_pago, anulada_at, motivo_anulacion, comanda_items(nombre, cantidad, precio_unitario)")
       .eq("estado", "cerrada")
       .gte("cerrada_at", `${desde}T00:00:00-03:00`).lt("cerrada_at", `${sumarDias(hasta, 1)}T00:00:00-03:00`)
       .order("cerrada_at", { ascending: false }).limit(MAX),
@@ -59,6 +59,7 @@ function verTicket(id) {
     ${f.anulada_at ? `<p class="t-anulado">Ticket anulado</p><p class="t-centro">${dia(f.anulada_at)} ${hora(f.anulada_at)} · ${esc(f.motivo_anulacion || "")}</p>` : ""}
     <p class="t-centro">${dia(f.cerrada_at)} ${hora(f.cerrada_at)} · ${esc(mesas[f.mesa_id] || "Mesa")}</p>
     <div class="t-lineas">${(f.comanda_items || []).map((i) => `<div><span>${Number(i.cantidad)} × ${esc(i.nombre)}</span><span>${plata(i.cantidad * i.precio_unitario)}</span></div>`).join("")}</div>
+    ${Number(f.descuento) > 0 ? `<div class="t-lineas"><div><span>Subtotal</span><span>${plata(Number(f.total) + Number(f.descuento))}</span></div><div><span>Descuento efectivo ${Math.round((Number(f.descuento) / (Number(f.total) + Number(f.descuento))) * 100)}%</span><span>− ${plata(f.descuento)}</span></div></div>` : ""}
     <div class="t-total"><span>Total</span><span>${plata(f.total)}</span></div>
     <p class="t-centro">${f.comensales ?? "?"} comensales · Pago: ${esc(f.medio_pago || "sin dato")}</p>
     <p class="t-legal">Reimpresión · Documento no válido como factura</p>

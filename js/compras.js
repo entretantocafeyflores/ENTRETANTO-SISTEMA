@@ -379,7 +379,7 @@ function armarBorrador(res, blob, tipo) {
     proveedor_id: p ? String(p.id) : "nuevo", prov_nombre: res.proveedor || "", prov_cuit: res.cuit || "",
     numero: res.numero || "", fecha: res.fecha || hoyStr(), vencimiento: res.vencimiento || "", vencAuto: !res.vencimiento,
     total: res.total ?? "", iva_incluido: typeof res.iva_incluido === "boolean" ? res.iva_incluido : null,
-    items: items.length ? items : [lineaVacia()], advertencias: Array.isArray(res.advertencias) ? res.advertencias.filter(Boolean) : [], blob, tipo,
+    guardarFoto: false, items: items.length ? items : [lineaVacia()], advertencias: Array.isArray(res.advertencias) ? res.advertencias.filter(Boolean) : [], blob, tipo,
   };
   borrador = b;
   recalcVenc();
@@ -441,6 +441,7 @@ function dibujarBorrador() {
       <label>Total a pagar <input data-k="total" type="number" step="any" min="0" inputmode="decimal" value="${esc(b.total)}"></label>
       <p class="t-centro" id="cfSuma">Suma de los renglones: ${plata(sumaItems())}</p>
     </div>
+    ${b.blob ? `<label class="check"><input type="checkbox" data-k="guardarFoto"${b.guardarFoto ? " checked" : ""}> Guardar también la foto de la factura (ocupa espacio en Supabase)</label>` : ""}
     <p id="cfError" class="error" role="alert"></p>
     <div class="fila"><button class="principal" data-guardar-fact>Guardar factura</button><button class="link" data-cancelar-fact>Descartar</button></div>`;
 }
@@ -539,7 +540,7 @@ async function guardarFactura() {
     if (e2) { await db.from("facturas").delete().eq("id", fa.id); throw new Error("No se pudieron guardar los renglones: " + e2.message); }
     // 5) Foto (si falla, la factura queda guardada igual)
     let sinFoto = false;
-    if (b.blob) {
+    if (b.blob && b.guardarFoto) {
       const ext = b.tipo === "application/pdf" ? "pdf" : "jpg";
       const ruta = `${b.fecha.slice(0, 4)}/${fa.id}-${Date.now()}.${ext}`;
       const sub = await db.storage.from("facturas").upload(ruta, b.blob, { contentType: b.tipo });
