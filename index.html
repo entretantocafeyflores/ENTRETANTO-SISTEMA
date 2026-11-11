@@ -213,6 +213,105 @@
     </main>
   </div>
 
+  <div class="principal-area" data-vista="compras" hidden>
+    <header class="encabezado">
+      <p>Proveedores y facturas</p>
+      <h1>Compras</h1>
+    </header>
+
+    <main class="contenido una">
+      <section class="panel">
+        <div id="coNav" class="chips">
+          <button class="chip" data-cs-btn="alertas">Avisos</button>
+          <button class="chip" data-cs-btn="cargar">Cargar factura</button>
+          <button class="chip" data-cs-btn="facturas">Facturas</button>
+          <button class="chip" data-cs-btn="proveedores">Proveedores</button>
+          <button class="chip" data-cs-btn="insumos">Insumos y precios</button>
+        </div>
+        <p id="coError" class="error" role="alert"></p>
+      </section>
+
+      <section class="panel" data-cs="alertas">
+        <h2>Pagos a proveedores</h2>
+        <p id="coPagosResumen" class="t-centro"></p>
+        <div id="coPagos" class="lista-est co-lista"></div>
+        <h2>Stock para reponer</h2>
+        <div id="coStock" class="lista-est co-lista"></div>
+        <h2>Cambios de precio</h2>
+        <div id="coCambios" class="lista-est co-lista"></div>
+      </section>
+
+      <section class="panel" data-cs="cargar" hidden>
+        <h2>Cargar una factura</h2>
+        <p class="nota" style="margin-top:0">Sacale una foto a la factura (completa, derecha y con buena luz) y el sistema lee los productos y sus precios. Antes de guardar, revisás que esté todo bien.</p>
+        <div class="cierre">
+          <label>Foto o PDF de la factura <input id="cfArchivo" type="file" accept="image/*,application/pdf"></label>
+          <div class="fila">
+            <button id="cfLeer" class="principal">Leer factura</button>
+            <button id="cfManual" class="link">Cargarla a mano</button>
+          </div>
+          <p id="cfEstado" class="t-centro"></p>
+        </div>
+        <div id="cfForm" hidden></div>
+        <datalist id="coUnidades">
+          <option value="kg"></option><option value="g"></option><option value="l"></option><option value="ml"></option>
+          <option value="unidad"></option><option value="docena"></option><option value="caja"></option><option value="paquete"></option><option value="bolsa"></option>
+        </datalist>
+      </section>
+
+      <section class="panel" data-cs="facturas" hidden>
+        <h2>Facturas</h2>
+        <div id="facChips" class="chips">
+          <button class="chip" data-ff="pendiente">Por pagar</button>
+          <button class="chip" data-ff="pagada">Pagadas</button>
+          <button class="chip" data-ff="todas">Todas</button>
+        </div>
+        <input id="facBuscar" type="search" placeholder="Buscá por proveedor o N° de factura">
+        <div id="facLista" class="lista-est co-lista"></div>
+        <div id="facDetalle" hidden></div>
+      </section>
+
+      <section class="panel" data-cs="proveedores" hidden>
+        <h2 id="pTitulo">Nuevo proveedor</h2>
+        <form id="pForm" class="grilla2">
+          <input type="hidden" id="pId">
+          <label>Nombre <input id="pNombre" required></label>
+          <label>CUIT <input id="pCuit" inputmode="numeric"></label>
+          <label>Teléfono <input id="pTel" type="tel"></label>
+          <label>Días de plazo para pagar <input id="pPlazo" type="number" min="0" step="1" inputmode="numeric" value="0"></label>
+          <label class="ancho">Notas <input id="pNotas"></label>
+          <label class="check ancho"><input id="pActivo" type="checkbox" checked> Activo</label>
+          <div class="fila ancho">
+            <button class="principal">Guardar proveedor</button>
+            <button type="button" id="pCancelar" class="link" hidden>Cancelar edición</button>
+          </div>
+        </form>
+        <h2>Proveedores</h2>
+        <div id="pLista" class="lista-est co-lista"></div>
+      </section>
+
+      <section class="panel" data-cs="insumos" hidden>
+        <h2 id="iTitulo">Nuevo insumo</h2>
+        <form id="iForm" class="grilla2">
+          <input type="hidden" id="iId">
+          <label>Nombre <input id="iNombre" required></label>
+          <label>Unidad de compra <input id="iUnidad" list="coUnidades" value="unidad"></label>
+          <label>Proveedor habitual <select id="iProv"></select></label>
+          <label>Stock actual <input id="iStock" type="number" step="any" min="0" inputmode="decimal" value="0"></label>
+          <label>Avisarme si queda menos de <input id="iMin" type="number" step="any" min="0" inputmode="decimal" placeholder="Vacío = sin aviso"></label>
+          <label class="check ancho"><input id="iActivo" type="checkbox" checked> Activo</label>
+          <div class="fila ancho">
+            <button class="principal">Guardar insumo</button>
+            <button type="button" id="iCancelar" class="link" hidden>Cancelar edición</button>
+          </div>
+        </form>
+        <h2>Insumos</h2>
+        <input id="iBuscar" type="search" placeholder="Buscá un insumo">
+        <div id="iLista" class="lista-est co-lista"></div>
+      </section>
+    </main>
+  </div>
+
   <div class="principal-area" data-vista="backup" hidden>
     <header class="encabezado">
       <p>Tus datos</p>
