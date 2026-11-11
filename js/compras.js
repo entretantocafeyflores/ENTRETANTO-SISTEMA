@@ -42,7 +42,7 @@ async function cargarBase() {
   if (err) {
     const falta = /does not exist|schema cache|PGRST205|42P01/i.test(`${err.code} ${err.message}`);
     caja.textContent = falta
-      ? "Todavía falta crear las tablas de Compras en Supabase. Pegá el archivo sql/03-compras.sql en el SQL Editor y ejecutalo."
+      ? "Todavía falta crear las tablas de Compras en Supabase. Pegá el archivo sql/03-compras.sql en el SQL Editor y ejecutalo. (Detalle técnico: " + err.code + " " + err.message + ")"
       : "No se pudo cargar Compras: " + err.message;
     return false;
   }
