@@ -4,7 +4,7 @@
 
 const SUPABASE_URL = process.env.SUPABASE_URL || "https://kpvfrbnxleafyeavtbud.supabase.co";
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "sb_publishable_kWUN5Df8AGsV2LbXq2-Ndw_XK0Hy_9n";
-const MODELO = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MODELO = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 const TIPOS_OK = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
 
 const responder = (res, codigo, cuerpo) => res.status(codigo).json(cuerpo);
@@ -90,22 +90,38 @@ module.exports = async (req, res) => {
   const hoy = new Date().toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
   const bloque = { inline_data: { mime_type: tipo, data: archivo } };
 
-  let r;
+  const pedido = armarPedido(nombres, hoy);
+  // Pide a Gemini que piense poco, para que conteste rápido (el tope de Vercel es 60 segundos).
+  const llamar = (pensarPoco) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODELO)}:generateContent`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-goog-api-key": clave },
+    signal: AbortSignal.timeout(50000),
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [bloque, { text: pedido }] }],
+      generationConfig: {
+        temperature: 0,
+        responseMimeType: "application/json",
+        maxOutputTokens: 8192,
+        ...(pensarPoco ? { thinkingConfig: { thinkingLevel: "low" } } : {}),
+      },
+    }),
+  });
+
+  let r, detalle = "";
   try {
-    r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODELO)}:generateContent`, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-goog-api-key": clave },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [bloque, { text: armarPedido(nombres, hoy) }] }],
-        generationConfig: { temperature: 0, responseMimeType: "application/json", maxOutputTokens: 8192 },
-      }),
-    });
-  } catch {
-    return responder(res, 502, { error: "No se pudo conectar con el lector de facturas. Probá de nuevo." });
+    r = await llamar(true);
+    if (r.status === 400) {
+      detalle = await r.text().catch(() => "");
+      if (/think/i.test(detalle)) r = await llamar(false);
+    }
+  } catch (e) {
+    console.error("Gemini sin respuesta", e && e.name);
+    const tarde = e && (e.name === "TimeoutError" || e.name === "AbortError");
+    return responder(res, 502, { error: tarde ? "El lector tardó demasiado. Probá de nuevo con una foto más chica o cargá la factura a mano." : "No se pudo conectar con el lector de facturas. Probá de nuevo." });
   }
 
   if (!r.ok) {
-    const detalle = await r.text().catch(() => "");
+    if (!detalle || r.status !== 400) detalle = await r.text().catch(() => "");
     console.error("Gemini", r.status, detalle.slice(0, 500));
     if (r.status === 400 && /API_KEY|API key/i.test(detalle)) return responder(res, 502, { error: "La clave de Gemini no es válida. Revisala en Vercel." });
     if (r.status === 403) return responder(res, 502, { error: "La clave de Gemini no tiene permiso. Revisala en Google AI Studio." });
