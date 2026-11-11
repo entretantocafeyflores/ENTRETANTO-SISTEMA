@@ -1,10 +1,10 @@
-// Lee una factura (foto o PDF) con Claude y devuelve los renglones con precios.
-// Corre en Vercel (servidor): la clave de Anthropic NUNCA llega al navegador.
-// Necesita la variable de entorno ANTHROPIC_API_KEY (Vercel > Settings > Environment Variables).
+// Lee una factura (foto o PDF) con Google Gemini y devuelve los renglones con precios.
+// Corre en Vercel (servidor): la clave de Gemini NUNCA llega al navegador.
+// Necesita la variable de entorno GEMINI_API_KEY (Vercel > Settings > Environment Variables).
 
 const SUPABASE_URL = process.env.SUPABASE_URL || "https://kpvfrbnxleafyeavtbud.supabase.co";
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "sb_publishable_kWUN5Df8AGsV2LbXq2-Ndw_XK0Hy_9n";
-const MODELO = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
+const MODELO = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const TIPOS_OK = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
 
 const responder = (res, codigo, cuerpo) => res.status(codigo).json(cuerpo);
@@ -79,8 +79,8 @@ module.exports = async (req, res) => {
     return responder(res, 502, { error: "No se pudo verificar tu usuario. Probá de nuevo." });
   }
 
-  const clave = process.env.ANTHROPIC_API_KEY;
-  if (!clave) return responder(res, 500, { error: "Falta configurar la clave de Anthropic en Vercel (ANTHROPIC_API_KEY)." });
+  const clave = process.env.GEMINI_API_KEY;
+  if (!clave) return responder(res, 500, { error: "Falta configurar la clave de Gemini en Vercel (GEMINI_API_KEY)." });
 
   const { archivo, tipo, insumos } = req.body || {};
   if (!archivo || !TIPOS_OK.includes(tipo)) return responder(res, 400, { error: "El archivo no es una imagen ni un PDF válido." });
@@ -88,19 +88,16 @@ module.exports = async (req, res) => {
 
   const nombres = (Array.isArray(insumos) ? insumos : []).map((n) => String(n).slice(0, 80)).slice(0, 500);
   const hoy = new Date().toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
-  const bloque = tipo === "application/pdf"
-    ? { type: "document", source: { type: "base64", media_type: tipo, data: archivo } }
-    : { type: "image", source: { type: "base64", media_type: tipo, data: archivo } };
+  const bloque = { inline_data: { mime_type: tipo, data: archivo } };
 
   let r;
   try {
-    r = await fetch("https://api.anthropic.com/v1/messages", {
+    r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODELO)}:generateContent`, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": clave, "anthropic-version": "2023-06-01" },
+      headers: { "content-type": "application/json", "x-goog-api-key": clave },
       body: JSON.stringify({
-        model: MODELO,
-        max_tokens: 4096,
-        messages: [{ role: "user", content: [bloque, { type: "text", text: armarPedido(nombres, hoy) }] }],
+        contents: [{ role: "user", parts: [bloque, { text: armarPedido(nombres, hoy) }] }],
+        generationConfig: { temperature: 0, responseMimeType: "application/json", maxOutputTokens: 8192 },
       }),
     });
   } catch {
@@ -109,16 +106,17 @@ module.exports = async (req, res) => {
 
   if (!r.ok) {
     const detalle = await r.text().catch(() => "");
-    console.error("Anthropic", r.status, detalle.slice(0, 500));
-    if (r.status === 401) return responder(res, 502, { error: "La clave de Anthropic no es válida. Revisala en Vercel." });
-    if (r.status === 400 && /credit/i.test(detalle)) return responder(res, 502, { error: "La cuenta de Anthropic no tiene crédito. Cargá saldo en console.anthropic.com." });
-    if (r.status === 429) return responder(res, 502, { error: "Hay demasiados pedidos juntos. Esperá un minuto y probá de nuevo." });
+    console.error("Gemini", r.status, detalle.slice(0, 500));
+    if (r.status === 400 && /API_KEY|API key/i.test(detalle)) return responder(res, 502, { error: "La clave de Gemini no es válida. Revisala en Vercel." });
+    if (r.status === 403) return responder(res, 502, { error: "La clave de Gemini no tiene permiso. Revisala en Google AI Studio." });
+    if (r.status === 429) return responder(res, 502, { error: "Se alcanzó el límite gratuito de Gemini. Esperá un minuto o cargá la factura a mano." });
     return responder(res, 502, { error: "El lector de facturas falló. Probá de nuevo o cargá la factura a mano." });
   }
 
   try {
     const data = await r.json();
-    const texto = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n");
+    const partes = (((data.candidates || [])[0] || {}).content || {}).parts || [];
+    const texto = partes.map((p) => p.text || "").join("\n");
     return responder(res, 200, sacarJson(texto));
   } catch {
     return responder(res, 502, { error: "No pude interpretar la factura. Probá con otra foto más clara o cargala a mano." });
