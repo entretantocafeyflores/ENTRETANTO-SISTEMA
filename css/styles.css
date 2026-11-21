@@ -352,28 +352,29 @@ textarea:focus { border-color: var(--dorado); box-shadow: 0 0 0 3px rgba(217, 17
 [data-vista="presupuestos"] .item[data-pr-abrir] { cursor: pointer; }
 [data-vista="presupuestos"] .item[data-pr-abrir]:hover { background: var(--arena); }
 #prBuscar { width: 100%; margin: 14px 0 12px; }
-.pr-doc { background: #fff; color: #2b2220; border: 1.5px solid var(--arena); border-radius: 12px; max-width: 720px; margin: 0 auto; padding: 34px 38px; font-size: .98rem; line-height: 1.5; }
-.pr-membrete { text-align: center; margin-bottom: 22px; }
-.pr-membrete img { width: 62%; max-width: 360px; height: auto; }
-.pr-cab { display: flex; justify-content: space-between; gap: 12px; font-weight: 700; margin-bottom: 14px; }
-.pr-sub { font-weight: 700; text-decoration: underline; margin-bottom: 4px; }
-.pr-caract { font-weight: 600; margin-bottom: 18px; }
-.pr-titulo { text-align: center; font-size: 1.05rem; letter-spacing: .06em; margin: 22px 0 12px; }
-.pr-sec { margin-bottom: 16px; }
-.pr-sec h4 { text-align: center; margin-bottom: 6px; }
+.pr-doc { background: #fff; color: #2b2220; border: 1.5px solid var(--arena); border-radius: 12px; max-width: 720px; margin: 0 auto; padding: 26px 34px; font-size: .92rem; line-height: 1.4; }
+.pr-doc p, .pr-doc h3, .pr-doc h4, .pr-doc ul { margin: 0; }
+.pr-membrete { text-align: center; margin-bottom: 14px; }
+.pr-membrete img { width: 34%; max-width: 200px; height: auto; }
+.pr-cab { display: flex; justify-content: space-between; gap: 12px; font-weight: 700; margin-bottom: 10px; }
+.pr-sub { font-weight: 700; text-decoration: underline; margin-bottom: 2px; }
+.pr-caract { font-weight: 600; line-height: 1.3; margin-bottom: 10px; }
+.pr-titulo { text-align: center; font-size: 1rem; letter-spacing: .06em; margin: 14px 0 8px; }
+.pr-sec { margin-bottom: 10px; }
+.pr-sec h4 { text-align: center; margin-bottom: 4px; }
 .pr-sec p { white-space: pre-wrap; }
-.pr-doc table { width: 100%; border-collapse: collapse; font-size: .92rem; }
-.pr-doc th, .pr-doc td { border: 1px solid #cfc7bf; padding: 8px 10px; text-align: left; }
+.pr-doc table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.pr-doc th, .pr-doc td { border: 1px solid #cfc7bf; padding: 6px 8px; text-align: left; }
 .pr-doc th { background: var(--hueso); }
 .pr-doc .c { text-align: center; }
 .pr-doc .d { text-align: right; white-space: nowrap; }
 .pr-total td { background: var(--hueso); font-weight: 700; }
-.pr-chico { font-size: .85rem; color: var(--gris); margin-top: 6px; }
-.pr-cond { padding-left: 20px; font-size: .88rem; display: flex; flex-direction: column; gap: 4px; }
-.pr-saludo { margin-top: 26px; font-style: italic; }
-.pr-firmas { display: flex; gap: 40px; margin-top: 60px; }
-.pr-firmas > div { flex: 1; border-top: 1px solid #2b2220; padding-top: 6px; text-align: center; font-size: .82rem; }
-.pr-pie { text-align: center; margin-top: 34px; padding-top: 12px; border-top: 1px solid #e3ddd5; font-size: .8rem; color: var(--gris); }
+.pr-chico { font-size: .82rem; color: var(--gris); margin-top: 4px; }
+.pr-cond { padding-left: 20px; font-size: .84rem; display: flex; flex-direction: column; gap: 2px; }
+.pr-saludo { margin-top: 16px; font-style: italic; }
+.pr-firmas { display: flex; gap: 40px; margin-top: 40px; }
+.pr-firmas > div { flex: 1; border-top: 1px solid #2b2220; padding-top: 6px; text-align: center; font-size: .8rem; }
+.pr-pie { text-align: center; margin-top: 20px; padding-top: 10px; border-top: 1px solid #e3ddd5; font-size: .78rem; color: var(--gris); }
 @media (max-width: 560px) { .pr-doc { padding: 22px 18px; } .pr-firmas { flex-direction: column; gap: 46px; } }
 @media print {
   [data-vista="presupuestos"] .panel { box-shadow: none; background: #fff; padding: 0; }
