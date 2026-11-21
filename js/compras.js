@@ -42,7 +42,7 @@ async function cargarBase() {
   if (err) {
     const falta = /does not exist|schema cache|PGRST205|42P01/i.test(`${err.code} ${err.message}`);
     caja.textContent = falta
-      ? "Todavía falta crear las tablas de Compras en Supabase. Pegá el archivo sql/03-compras.sql en el SQL Editor y ejecutalo. (Detalle técnico: " + err.code + " " + err.message + ")"
+      ? "Todavía falta crear las tablas de Compras en Supabase. Pegá el archivo sql/03-compras.sql en el SQL Editor y ejecutalo."
       : "No se pudo cargar Compras: " + err.message;
     return false;
   }
@@ -191,7 +191,16 @@ async function cambiarEstado(id, estado) {
   const fila = estado === "pagada" ? { estado, pagada_fecha: hoyStr() } : { estado, pagada_fecha: null };
   const { error } = await db.from("facturas").update(fila).eq("id", id);
   if (error) return aviso("No se pudo guardar el cambio: " + error.message);
-  aviso(estado === "pagada" ? "Factura marcada como pagada" : "Factura marcada como pendiente");
+  // Se anota (o se saca) sola en Gastos > Salidas como gasto variable
+  const f = fact.find((x) => String(x.id) === String(id));
+  let sal = {};
+  if (estado === "pagada" && f && n2(f.total) > 0) {
+    sal = await db.from("salidas").insert({ fecha: hoyStr(), concepto: `Factura ${f.numero || "sin número"} · ${nomProv(f.proveedor_id)}`, monto: n2(f.total), tipo: "variable", categoria: "Mercadería", factura_id: f.id });
+  } else if (estado === "pendiente") {
+    sal = await db.from("salidas").delete().eq("factura_id", id);
+  }
+  const fallo = sal.error && !/duplicate|unique/i.test(sal.error.message);
+  aviso(fallo ? "Factura actualizada, pero no se pudo anotar en Gastos. ¿Ejecutaste el script 05-gastos.sql?" : estado === "pagada" ? "Factura marcada como pagada" : "Factura marcada como pendiente", fallo ? 6000 : 3500);
   await recargar();
 }
 

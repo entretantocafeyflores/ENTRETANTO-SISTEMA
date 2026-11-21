@@ -5,6 +5,8 @@ import { initEstadisticas } from "./estadisticas.js";
 import { initHistorial } from "./historial.js";
 import { initBackup } from "./backup.js";
 import { initCompras, actualizarAlertas } from "./compras.js";
+import { initGastos, actualizarAlertasGastos } from "./gastos.js";
+import { initPresupuestos } from "./presupuestos.js";
 
 const $ = (s) => document.querySelector(s);
 
@@ -20,7 +22,8 @@ const MODULOS = [
   { id: "mesas",        nombre: "Mesas",        init: initMesas },
   { id: "historial",    nombre: "Historial",    init: initHistorial },
   { id: "compras",      nombre: "Compras",      init: initCompras },
-  { id: "costeo",       nombre: "Costeo" },
+  { id: "gastos",       nombre: "Gastos",       init: initGastos },
+  { id: "presupuestos", nombre: "Presupuestos", init: initPresupuestos },
   { id: "estadisticas", nombre: "Estadísticas", init: initEstadisticas },
   { id: "backup",       nombre: "Backup",       init: initBackup },
 ];
@@ -61,6 +64,7 @@ async function armarApp(session) {
   $("#app").hidden = false;
 
   if (permitidos.includes("compras")) actualizarAlertas(); // número de avisos en la solapa
+  if (permitidos.includes("gastos")) actualizarAlertasGastos();
 
   const primera = visibles.find((m) => m.init);
   mostrarVista(primera ? primera.id : "sinacceso");

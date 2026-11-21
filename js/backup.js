@@ -19,6 +19,10 @@ const TABLAS = [
   { n: "insumos", t: "Insumos, precios y stock", id: true },
   { n: "facturas", t: "Facturas de proveedores", id: true },
   { n: "factura_items", t: "Renglones de cada factura", id: true },
+  { n: "presupuestos", t: "Presupuestos para clientes", id: true },
+  { n: "gastos_fijos", t: "Gastos fijos", id: true },
+  { n: "salidas", t: "Salidas y pagos", id: true },
+  { n: "ajustes_gastos", t: "Supuestos de gastos", id: false },
 ];
 
 function aviso(texto) {
