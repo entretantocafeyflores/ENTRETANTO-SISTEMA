@@ -313,6 +313,97 @@
     </main>
   </div>
 
+  <div class="principal-area" data-vista="gastos" hidden>
+    <header class="encabezado">
+      <p>Gastos fijos y salidas</p>
+      <h1>Gastos</h1>
+    </header>
+
+    <main class="contenido una">
+      <section class="panel">
+        <div id="gNav" class="chips">
+          <button class="chip" data-gs-btn="equilibrio">Equilibrio</button>
+          <button class="chip" data-gs-btn="fijos">Gastos fijos</button>
+          <button class="chip" data-gs-btn="salidas">Salidas</button>
+        </div>
+        <p id="gError" class="error" role="alert"></p>
+      </section>
+
+      <section class="panel" data-gs="equilibrio">
+        <h2>Punto de equilibrio</h2>
+        <p class="nota" style="margin-top:0">Cuánto tenés que vender, y cuánta gente tiene que entrar, para cubrir todos los gastos del mes.</p>
+        <div id="gEq" class="lista-est co-lista"></div>
+        <h2>Supuestos</h2>
+        <p id="aReal" class="nota" style="margin-top:0"></p>
+        <form id="aForm" class="grilla2">
+          <label>Días que abrís por mes <input id="aDias" type="number" min="1" max="31" step="1" inputmode="numeric" placeholder="26"></label>
+          <label>% de mercadería estimado <input id="aCv" type="number" min="0" max="99" step="any" inputmode="decimal" placeholder="Vacío = usar datos reales"></label>
+          <label>Gasto por persona estimado <input id="aGasto" type="number" min="0" step="any" inputmode="decimal" placeholder="Vacío = usar ventas reales"></label>
+          <div class="fila ancho"><button class="principal">Guardar supuestos</button></div>
+        </form>
+        <p class="nota">Si dejás vacío el porcentaje o el gasto por persona, el sistema usa tus datos reales de los últimos 90 días. Los estimados sirven al principio, cuando todavía hay pocas ventas.</p>
+      </section>
+
+      <section class="panel" data-gs="fijos" hidden>
+        <h2 id="fTitulo">Nuevo gasto fijo</h2>
+        <form id="fForm" class="grilla2">
+          <input type="hidden" id="fId">
+          <label>Qué es <input id="fConcepto" placeholder="Ej: Alquiler, Sueldo de Ana, Luz" required></label>
+          <label>Tipo <select id="fCategoria">
+            <option>Sueldos</option><option>Alquiler</option><option>Servicios</option><option>Cuotas</option><option>Impuestos</option><option selected>Otros</option>
+          </select></label>
+          <label>Monto por mes <input id="fMonto" type="number" min="0" step="any" inputmode="decimal" required></label>
+          <label>Día de vencimiento (opcional) <input id="fDia" type="number" min="1" max="31" step="1" inputmode="numeric"></label>
+          <label class="check ancho"><input id="fActivo" type="checkbox" checked> Activo</label>
+          <div class="fila ancho">
+            <button class="principal">Guardar gasto fijo</button>
+            <button type="button" id="fCancelar" class="link" hidden>Cancelar edición</button>
+          </div>
+        </form>
+        <p class="nota" style="margin-top:0">Para los sueldos, cargá una línea por persona con el monto total que te cuesta por mes.</p>
+        <h2>Gastos fijos de este mes</h2>
+        <p id="fTotal" class="t-centro"></p>
+        <div id="fLista" class="lista-est co-lista"></div>
+      </section>
+
+      <section class="panel" data-gs="salidas" hidden>
+        <h2>Anotar una salida</h2>
+        <form id="sForm" class="grilla2">
+          <label>Fecha <input id="sFecha" type="date" required></label>
+          <label>Qué pagaste <input id="sConcepto" placeholder="Ej: Limpieza, arreglo de la heladera" required></label>
+          <label>Monto <input id="sMonto" type="number" min="0" step="any" inputmode="decimal" required></label>
+          <label>Tipo <select id="sTipo"><option value="variable">Variable</option><option value="fijo">Fijo</option></select></label>
+          <label>Rubro (opcional) <input id="sCategoria" list="sRubros"></label>
+          <div class="fila ancho"><button class="principal">Anotar salida</button></div>
+        </form>
+        <datalist id="sRubros"><option value="Mercadería"></option><option value="Limpieza"></option><option value="Mantenimiento"></option><option value="Descartables"></option><option value="Otros"></option></datalist>
+        <p class="nota" style="margin-top:0">Las facturas de proveedores que marcás como pagadas en Compras y los gastos fijos que marcás como pagados se anotan solos.</p>
+        <h2>Salidas del mes</h2>
+        <label>Mes <input id="sMes" type="month"></label>
+        <div id="sChips" class="chips" style="margin-top:12px">
+          <button class="chip" data-sf="todas">Todas</button>
+          <button class="chip" data-sf="fijo">Fijas</button>
+          <button class="chip" data-sf="variable">Variables</button>
+        </div>
+        <div id="sResumen" class="lista-est co-lista"></div>
+        <div id="sLista" class="lista-est co-lista" style="margin-top:14px"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="principal-area" data-vista="presupuestos" hidden>
+    <header class="encabezado">
+      <p>Propuestas para clientes</p>
+      <h1>Presupuestos</h1>
+    </header>
+    <main class="contenido una">
+      <section class="panel">
+        <p id="prError" class="error" role="alert"></p>
+        <div id="prCont"></div>
+      </section>
+    </main>
+  </div>
+
   <div class="principal-area" data-vista="backup" hidden>
     <header class="encabezado">
       <p>Tus datos</p>
