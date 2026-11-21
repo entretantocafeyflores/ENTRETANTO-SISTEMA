@@ -335,4 +335,48 @@ button:disabled:hover { background: transparent; }
 .hist div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 3px 0; }
 .insignia { margin-left: auto; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--cafe); color: var(--hueso); font-size: .78rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
 #aviso { max-width: 92vw; text-align: center; }
-@media print { [data-vista="compras"] { display: none !important; } }
+@media print { [data-vista="compras"], [data-vista="gastos"] { display: none !important; } }
+
+/* ====== GASTOS ====== */
+.item.destacado { background: var(--dorado); }
+.item.destacado small { color: var(--cafe); }
+.avance { margin-top: 10px; }
+.barra { height: 14px; background: var(--arena); border-radius: 999px; overflow: hidden; margin-bottom: 10px; }
+.barra > i { display: block; height: 100%; background: var(--cafe); border-radius: 999px; }
+
+/* ====== PRESUPUESTOS ====== */
+textarea { font: inherit; font-size: 1rem; color: var(--cafe); padding: 10px 14px; border: 1.5px solid var(--arena); border-radius: 14px; background: var(--hueso); outline: none; resize: vertical; }
+textarea:focus { border-color: var(--dorado); box-shadow: 0 0 0 3px rgba(217, 179, 130, .35); }
+.opciones { display: flex; flex-direction: column; gap: 10px; margin: 6px 0 4px; }
+.item-wrap .acciones { margin: 0 8px 10px; flex-wrap: wrap; }
+[data-vista="presupuestos"] .item[data-pr-abrir] { cursor: pointer; }
+[data-vista="presupuestos"] .item[data-pr-abrir]:hover { background: var(--arena); }
+#prBuscar { width: 100%; margin: 14px 0 12px; }
+.pr-doc { background: #fff; color: #2b2220; border: 1.5px solid var(--arena); border-radius: 12px; max-width: 720px; margin: 0 auto; padding: 34px 38px; font-size: .98rem; line-height: 1.5; }
+.pr-membrete { text-align: center; margin-bottom: 22px; }
+.pr-membrete img { width: 62%; max-width: 360px; height: auto; }
+.pr-cab { display: flex; justify-content: space-between; gap: 12px; font-weight: 700; margin-bottom: 14px; }
+.pr-sub { font-weight: 700; text-decoration: underline; margin-bottom: 4px; }
+.pr-caract { font-weight: 600; margin-bottom: 18px; }
+.pr-titulo { text-align: center; font-size: 1.05rem; letter-spacing: .06em; margin: 22px 0 12px; }
+.pr-sec { margin-bottom: 16px; }
+.pr-sec h4 { text-align: center; margin-bottom: 6px; }
+.pr-sec p { white-space: pre-wrap; }
+.pr-doc table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.pr-doc th, .pr-doc td { border: 1px solid #cfc7bf; padding: 8px 10px; text-align: left; }
+.pr-doc th { background: var(--hueso); }
+.pr-doc .c { text-align: center; }
+.pr-doc .d { text-align: right; white-space: nowrap; }
+.pr-total td { background: var(--hueso); font-weight: 700; }
+.pr-chico { font-size: .85rem; color: var(--gris); margin-top: 6px; }
+.pr-cond { padding-left: 20px; font-size: .88rem; display: flex; flex-direction: column; gap: 4px; }
+.pr-saludo { margin-top: 26px; font-style: italic; }
+.pr-firmas { display: flex; gap: 40px; margin-top: 60px; }
+.pr-firmas > div { flex: 1; border-top: 1px solid #2b2220; padding-top: 6px; text-align: center; font-size: .82rem; }
+.pr-pie { text-align: center; margin-top: 34px; padding-top: 12px; border-top: 1px solid #e3ddd5; font-size: .8rem; color: var(--gris); }
+@media (max-width: 560px) { .pr-doc { padding: 22px 18px; } .pr-firmas { flex-direction: column; gap: 46px; } }
+@media print {
+  [data-vista="presupuestos"] .panel { box-shadow: none; background: #fff; padding: 0; }
+  .pr-doc { border: none; border-radius: 0; max-width: none; padding: 0; }
+  .pr-doc table, .pr-doc tr, .pr-sec, .pr-firmas { break-inside: avoid; }
+}
