@@ -16,9 +16,11 @@ const hoyStr = () => new Date().toLocaleDateString("en-CA", { timeZone: TZ });
 const fechaCorta = (s) => (s ? s.split("-").reverse().join("/") : "");
 const norm = (s) => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-const CONDICIONES_DEFAULT = `Seña del 50% para confirmar la reserva.
-Saldo restante: 48 hs antes del evento.
-La cantidad de invitados se confirma 48 hs antes; se factura como mínimo garantizado.`;
+const CONDICIONES_DEFAULT = `Para reservar la fecha se abona una seña del 50%.
+El saldo restante se abona el día del evento.
+Si se suman invitados, hay que avisar con 24 horas de anticipación, sujeto a disponibilidad.
+Si hay alergias o restricciones alimentarias (celíacos, vegetarianos, etc.), avisar al reservar.
+Los valores corresponden al menú y a la cantidad de personas acordados; si cambian, el presupuesto se ajusta.`;
 const ESTADOS = { pendiente: "Pendiente", aceptado: "Aceptado", rechazado: "Rechazado" };
 
 let lista = [], iniciado = false, modo = "lista", filtro = "todos", busca = "", borrador = null, actual = null;
@@ -33,7 +35,7 @@ function aviso(texto, ms = 3500) {
 // ====== DATOS ======
 function blanco() {
   return {
-    id: null, fecha: hoyStr(), cliente: "", fecha_evento: "", lugar: "", invitados: "", formato: "", horario: "", validez_dias: "",
+    id: null, fecha: hoyStr(), cliente: "", fecha_evento: "", lugar: "", invitados: "", formato: "", horario: "", validez_dias: "14",
     incluir_logo: true, incluir_firmas: true, incluir_condiciones: true, iva_modo: "incluido", estado: "pendiente",
     secciones: [{ titulo: "", cuerpo: "" }], items: [], condiciones: CONDICIONES_DEFAULT,
   };
@@ -292,7 +294,7 @@ async function descargarPDF(btn) {
       onclone: (doc) => { Object.assign(doc.getElementById("prDoc").style, { width: "760px", maxWidth: "none", border: "none", borderRadius: "0", margin: "0" }); },
     });
     const pdf = new window.jspdf.jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    const margen = 12, ancho = pdf.internal.pageSize.getWidth() - margen * 2, alto = pdf.internal.pageSize.getHeight() - margen * 2;
+    const margen = 10, ancho = pdf.internal.pageSize.getWidth() - margen * 2, alto = pdf.internal.pageSize.getHeight() - margen * 2;
     const pxPorMM = canvas.width / ancho, altoPag = Math.floor(alto * pxPorMM);
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     let y = 0, primera = true;

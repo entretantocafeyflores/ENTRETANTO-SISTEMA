@@ -40,19 +40,21 @@ function panel(cual) {
 }
 
 async function cargar() {
-  const [m, c, p, a] = await Promise.all([
+  let [m, c, p, a] = await Promise.all([
     db.from("mesas").select("*").eq("activa", true).order("id"),
     db.from("categorias").select("*").order("orden").order("nombre"),
     db.from("productos").select("*").eq("activo", true).order("nombre"),
-    db.from("comandas").select("id, mesa_id, comanda_items(precio_unitario, cantidad)").eq("estado", "abierta"),
+    db.from("comandas").select("id, mesa_id, cliente, comanda_items(precio_unitario, cantidad)").eq("estado", "abierta"),
   ]);
+  // Si todavía no se corrió el script de nombres de mesa, sigue andando sin nombres.
+  if (a.error && /cliente/i.test(a.error.message)) a = await db.from("comandas").select("id, mesa_id, comanda_items(precio_unitario, cantidad)").eq("estado", "abierta");
   const fallos = [["mesas", m], ["categorías", c], ["productos", p], ["comandas", a]].filter(([, r]) => r.error);
   $("#mesasError").textContent = fallos.map(([n, r]) => `No se pudo leer ${n}: ${r.error.message}`).join(" · ");
   if (m.error) { $("#mesasGrid").innerHTML = ""; return; }
   mesas = m.data; cats = c.data || []; prods = p.data || [];
   abiertas = {};
   (a.data || []).forEach((x) => {
-    abiertas[x.mesa_id] = { id: x.id, total: x.comanda_items.reduce((s, i) => s + Number(i.precio_unitario) * Number(i.cantidad), 0) };
+    abiertas[x.mesa_id] = { id: x.id, cliente: x.cliente || null, total: x.comanda_items.reduce((s, i) => s + Number(i.precio_unitario) * Number(i.cantidad), 0) };
   });
   dibujarMesas();
 }
@@ -60,15 +62,17 @@ async function cargar() {
 function dibujarMesas() {
   $("#mesasGrid").innerHTML = mesas.map((m) => {
     const ab = abiertas[m.id];
-    return `<button class="mesa ${ab ? "ocupada" : ""} ${mesa && mesa.id === m.id ? "sel" : ""}" data-mesa="${m.id}">
-      ${esc(m.nombre)}<small>${ab ? plata(ab.total) : "Libre"}</small></button>`;
+    const nom = ab && ab.cliente ? `${esc(ab.cliente)}<small>${esc(m.nombre)} · ${plata(ab.total)}</small>` : `${esc(m.nombre)}<small>${ab ? plata(ab.total) : "Libre"}</small>`;
+    return `<button class="mesa ${ab ? "ocupada" : ""} ${mesa && mesa.id === m.id ? "sel" : ""}" data-mesa="${m.id}">${nom}</button>`;
   }).join("") || '<p class="vacio">Todavía no hay mesas cargadas.</p>';
 }
 
 async function abrirMesa(id) {
   mesa = mesas.find((m) => String(m.id) === String(id));
+  let nueva = false;
   if (abiertas[id]) comandaId = abiertas[id].id;
   else {
+    nueva = true;
     const { data, error } = await db.from("comandas").insert({ mesa_id: id }).select("id").single();
     if (error) return aviso("No se pudo abrir la mesa.");
     comandaId = data.id;
@@ -76,24 +80,26 @@ async function abrirMesa(id) {
   catSel = "";
   moviendo = false; mov = {};
   $("#comensales").value = ""; $("#partes").value = 1;
+  $("#cliente").value = (abiertas[id] && abiertas[id].cliente) || "";
   await cargarItems();
   panel("edit");
   dibujarMesas();
   $("#comanda").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (nueva) $("#cliente").focus({ preventScroll: true }); // mesa nueva: queda lista para escribir el nombre
 }
 
 async function cargarItems() {
   const { data, error } = await db.from("comanda_items").select("*").eq("comanda_id", comandaId).order("creado_at");
   if (error) return aviso("No se pudo cargar la comanda.");
   items = data.map((i) => ({ ...i, cantidad: Number(i.cantidad), precio_unitario: Number(i.precio_unitario) }));
-  abiertas[mesa.id] = { id: comandaId, total: items.reduce((s, i) => s + i.precio_unitario * i.cantidad, 0) };
+  abiertas[mesa.id] = { ...(abiertas[mesa.id] || {}), id: comandaId, total: items.reduce((s, i) => s + i.precio_unitario * i.cantidad, 0) };
   dibujarComanda();
   dibujarMesas();
 }
 
 function dibujarComanda() {
   const total = abiertas[mesa.id].total;
-  $("#comandaTitulo").textContent = mesa.nombre;
+  $("#comandaTitulo").textContent = abiertas[mesa.id].cliente ? `${mesa.nombre} · ${abiertas[mesa.id].cliente}` : mesa.nombre;
   $("#chips").innerHTML = [{ id: "", nombre: "Todo" }, ...cats].map((c) =>
     `<button class="chip ${String(c.id) === catSel ? "activa" : ""}" data-cat="${c.id}">${esc(c.nombre)}</button>`).join("");
   $("#prods").innerHTML = prods.filter((p) => !catSel || String(p.categoria_id) === catSel).map((p) =>
@@ -116,7 +122,7 @@ function dibujarMover() {
   $("#moverItems").innerHTML = items.map((i) => `<div class="item"><div>${esc(i.nombre)}<small>De ${i.cantidad} en la mesa</small></div>
     <div class="cant"><button data-mmenos="${i.id}" aria-label="Pasar uno menos">−</button><b>${mov[i.id] || 0}</b><button data-mmas="${i.id}" aria-label="Pasar uno más">+</button></div></div>`).join("");
   $("#destino").innerHTML = mesas.filter((m) => m.id !== mesa.id)
-    .map((m) => `<option value="${m.id}">${esc(m.nombre)}${abiertas[m.id] ? " (ocupada)" : ""}</option>`).join("");
+    .map((m) => `<option value="${m.id}">${esc(m.nombre)}${abiertas[m.id] && abiertas[m.id].cliente ? " – " + esc(abiertas[m.id].cliente) : ""}${abiertas[m.id] ? " (ocupada)" : ""}</option>`).join("");
 }
 
 function ajustarMover(id, delta) {
@@ -172,7 +178,7 @@ function verTicket(c, partes) {
   $("#ticket").innerHTML = `
     <img class="logo" src="img/logo.png" alt="Entretanto Café y Flores">
     <p class="t-num">Ticket N° ${String(c.numero_ticket).padStart(6, "0")}</p>
-    <p class="t-centro">${fecha} · ${esc(mesa.nombre)}</p>
+    <p class="t-centro">${fecha} · ${esc(mesa.nombre)}${c.cliente ? " · " + esc(c.cliente) : ""}</p>
     <div class="t-lineas">${items.map((i) => `<div><span>${i.cantidad} × ${esc(i.nombre)}</span><span>${plata(i.precio_unitario * i.cantidad)}</span></div>`).join("")}</div>
     ${desc > 0 ? `<div class="t-lineas"><div><span>Subtotal</span><span>${plata(bruto)}</span></div><div><span>Descuento efectivo ${Math.round((desc / bruto) * 100)}%</span><span>− ${plata(desc)}</span></div></div>` : ""}
     <div class="t-total"><span>Total</span><span>${plata(c.total)}</span></div>
@@ -186,6 +192,16 @@ function verTicket(c, partes) {
   panel("ticket");
 }
 
+async function guardarNombre() {
+  if (!mesa || !comandaId) return;
+  const nombre = $("#cliente").value.trim().slice(0, 40);
+  const { error } = await db.rpc("nombrar_comanda", { p_id: comandaId, p_cliente: nombre });
+  if (error) return aviso(error.code === "PGRST202" ? "Falta ejecutar el script de nombres de mesa en Supabase." : "No se pudo guardar el nombre.");
+  abiertas[mesa.id].cliente = nombre || null;
+  dibujarMesas();
+  dibujarComanda();
+}
+
 export function initMesas() {
   $("#medio").innerHTML = MEDIOS.map((m) => `<option>${m}</option>`).join("");
   cargar();
@@ -197,6 +213,8 @@ export function initMesas() {
     if (b) abrirMesa(b.dataset.mesa);
   });
 
+  $("#cliente").addEventListener("change", guardarNombre);
+  $("#cliente").addEventListener("keydown", (e) => { if (e.key === "Enter") e.target.blur(); });
   $("#partes").addEventListener("input", actualizarCobro);
   $("#medio").addEventListener("change", actualizarCobro);
 

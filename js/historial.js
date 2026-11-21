@@ -23,14 +23,15 @@ async function cargar() {
   const desde = $("#histDesde").value, hasta = $("#histHasta").value;
   $("#histError").textContent = "";
   if (!desde || !hasta || desde > hasta) { $("#histError").textContent = "Revisá las fechas: la de inicio tiene que ser anterior a la final."; return; }
-  const [c, m] = await Promise.all([
-    db.from("comandas")
-      .select("id, mesa_id, numero_ticket, abierta_at, cerrada_at, total, descuento, comensales, medio_pago, anulada_at, motivo_anulacion, comanda_items(nombre, cantidad, precio_unitario)")
-      .eq("estado", "cerrada")
-      .gte("cerrada_at", `${desde}T00:00:00-03:00`).lt("cerrada_at", `${sumarDias(hasta, 1)}T00:00:00-03:00`)
-      .order("cerrada_at", { ascending: false }).limit(MAX),
-    db.from("mesas").select("id, nombre"),
-  ]);
+  const consulta = (cols) => db.from("comandas")
+    .select(cols)
+    .eq("estado", "cerrada")
+    .gte("cerrada_at", `${desde}T00:00:00-03:00`).lt("cerrada_at", `${sumarDias(hasta, 1)}T00:00:00-03:00`)
+    .order("cerrada_at", { ascending: false }).limit(MAX);
+  const COLS = "id, mesa_id, cliente, numero_ticket, abierta_at, cerrada_at, total, descuento, comensales, medio_pago, anulada_at, motivo_anulacion, comanda_items(nombre, cantidad, precio_unitario)";
+  let [c, m] = await Promise.all([consulta(COLS), db.from("mesas").select("id, nombre")]);
+  // Si todavía no se corrió el script de nombres de mesa, el historial sigue andando sin nombres.
+  if (c.error && /cliente/i.test(c.error.message)) c = await consulta(COLS.replace("cliente, ", ""));
   if (c.error) { $("#histError").textContent = "No se pudo leer el historial: " + c.error.message; return; }
   mesas = Object.fromEntries((m.data || []).map((x) => [x.id, x.nombre]));
   filas = c.data;
@@ -38,13 +39,15 @@ async function cargar() {
   dibujar();
 }
 
+const etiqueta = (f) => `${f.cliente ? f.cliente + " · " : ""}${mesas[f.mesa_id] || "Mesa"}`;
+
 function dibujar() {
   const q = $("#histBuscar").value.trim().toLowerCase();
-  const ver = filas.filter((f) => !q || String(f.numero_ticket).includes(q.replace(/^0+/, "") || q) || (mesas[f.mesa_id] || "").toLowerCase().includes(q));
+  const ver = filas.filter((f) => !q || String(f.numero_ticket).includes(q.replace(/^0+/, "") || q) || etiqueta(f).toLowerCase().includes(q));
   $("#histNota").textContent = filas.length >= MAX ? `Mostrando los últimos ${MAX} tickets. Acotá las fechas para ver otros.` : "";
   $("#histLista").innerHTML = ver.length
     ? ver.map((f) => `<div class="item${f.anulada_at ? " anulado" : ""}" data-ticket="${f.id}" role="button" tabindex="0">
-        <div>Ticket ${nro(f.numero_ticket)}<small>${esc(mesas[f.mesa_id] || "Mesa")} · ${dia(f.cerrada_at)} ${hora(f.cerrada_at)} · ${f.comensales ?? "?"} com. · ${esc(f.medio_pago || "")}${f.anulada_at ? " · ANULADO" : ""}</small></div>
+        <div>Ticket ${nro(f.numero_ticket)}<small>${esc(etiqueta(f))} · ${dia(f.cerrada_at)} ${hora(f.cerrada_at)} · ${f.comensales ?? "?"} com. · ${esc(f.medio_pago || "")}${f.anulada_at ? " · ANULADO" : ""}</small></div>
         <div class="num">${plata(f.total)}</div></div>`).join("")
     : '<p class="vacio">No hay tickets para esa búsqueda.</p>';
 }
@@ -57,7 +60,7 @@ function verTicket(id) {
     <img class="logo" src="img/logo.png" alt="Entretanto Café y Flores">
     <p class="t-num">Ticket N° ${nro(f.numero_ticket)}</p>
     ${f.anulada_at ? `<p class="t-anulado">Ticket anulado</p><p class="t-centro">${dia(f.anulada_at)} ${hora(f.anulada_at)} · ${esc(f.motivo_anulacion || "")}</p>` : ""}
-    <p class="t-centro">${dia(f.cerrada_at)} ${hora(f.cerrada_at)} · ${esc(mesas[f.mesa_id] || "Mesa")}</p>
+    <p class="t-centro">${dia(f.cerrada_at)} ${hora(f.cerrada_at)} · ${esc(etiqueta(f))}</p>
     <div class="t-lineas">${(f.comanda_items || []).map((i) => `<div><span>${Number(i.cantidad)} × ${esc(i.nombre)}</span><span>${plata(i.cantidad * i.precio_unitario)}</span></div>`).join("")}</div>
     ${Number(f.descuento) > 0 ? `<div class="t-lineas"><div><span>Subtotal</span><span>${plata(Number(f.total) + Number(f.descuento))}</span></div><div><span>Descuento efectivo ${Math.round((Number(f.descuento) / (Number(f.total) + Number(f.descuento))) * 100)}%</span><span>− ${plata(f.descuento)}</span></div></div>` : ""}
     <div class="t-total"><span>Total</span><span>${plata(f.total)}</span></div>
