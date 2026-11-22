@@ -28,10 +28,17 @@ async function cargar() {
     .eq("estado", "cerrada")
     .gte("cerrada_at", `${desde}T00:00:00-03:00`).lt("cerrada_at", `${sumarDias(hasta, 1)}T00:00:00-03:00`)
     .order("cerrada_at", { ascending: false }).limit(MAX);
-  const COLS = "id, mesa_id, cliente, numero_ticket, abierta_at, cerrada_at, total, descuento, comensales, medio_pago, anulada_at, motivo_anulacion, comanda_items(nombre, cantidad, precio_unitario)";
+  const COLS = "id, mesa_id, cliente, medio_original, numero_ticket, abierta_at, cerrada_at, total, descuento, comensales, medio_pago, anulada_at, motivo_anulacion, comanda_items(nombre, cantidad, precio_unitario)";
   let [c, m] = await Promise.all([consulta(COLS), db.from("mesas").select("id, nombre")]);
   // Si todavía no se corrió el script de nombres de mesa, el historial sigue andando sin nombres.
-  if (c.error && /cliente/i.test(c.error.message)) c = await consulta(COLS.replace("cliente, ", ""));
+  // (también con medio_original y descuento, por si falta correr otro script)
+  let cols = COLS;
+  for (let i = 0; i < 3 && c.error; i++) {
+    const col = (/comandas\.(\w+)/.exec(c.error.message) || [])[1];
+    if (!["cliente", "medio_original", "descuento"].includes(col)) break;
+    cols = cols.replace(`${col}, `, "");
+    c = await consulta(cols);
+  }
   if (c.error) { $("#histError").textContent = "No se pudo leer el historial: " + c.error.message; return; }
   mesas = Object.fromEntries((m.data || []).map((x) => [x.id, x.nombre]));
   filas = c.data;
@@ -57,7 +64,7 @@ function verTicket(id) {
   if (!f) return;
   document.querySelectorAll("#histLista .item").forEach((e) => e.classList.toggle("sel", e.dataset.ticket === String(id)));
   $("#histTicket").innerHTML = `
-    <img class="logo" src="img/logo.png" alt="Entretanto Café y Flores">
+    <img class="logo" src="img/logo-ticket.png" alt="Entretanto Café y Flores">
     <p class="t-num">Ticket N° ${nro(f.numero_ticket)}</p>
     ${f.anulada_at ? `<p class="t-anulado">Ticket anulado</p><p class="t-centro">${dia(f.anulada_at)} ${hora(f.anulada_at)} · ${esc(f.motivo_anulacion || "")}</p>` : ""}
     <p class="t-centro">${dia(f.cerrada_at)} ${hora(f.cerrada_at)} · ${esc(etiqueta(f))}</p>
@@ -66,9 +73,15 @@ function verTicket(id) {
     <div class="t-total"><span>Total</span><span>${plata(f.total)}</span></div>
     <p class="t-centro">${f.comensales ?? "?"} comensales · Pago: ${esc(f.medio_pago || "sin dato")}</p>
     <p class="t-legal">Reimpresión · Documento no válido como factura</p>
+    ${f.medio_original && f.medio_original !== f.medio_pago ? `<p class="t-centro no-print">Forma de pago corregida (antes: ${esc(f.medio_original)})</p>` : ""}
     <div class="fila no-print">
       <button class="principal" id="histImprimir">Imprimir ticket</button>
-      ${f.anulada_at ? "" : '<button class="link" id="histAnular">Anular ticket</button>'}
+      ${f.anulada_at ? "" : '<button id="histPagoCambiar">Cambiar forma de pago</button><button class="link" id="histAnular">Anular ticket</button>'}
+    </div>
+    <div id="histPagoBox" class="cierre no-print" hidden>
+      <label>Nueva forma de pago <select id="histPagoNuevo">${MEDIOS.map((m) => `<option${m === f.medio_pago ? " selected" : ""}>${m}</option>`).join("")}</select></label>
+      <p class="nota" style="margin-top:0">Si pasa a efectivo se aplica el 10% de descuento; si sale de efectivo, se quita. Solo lo puede hacer un administrador.</p>
+      <div class="fila"><button class="principal" id="histPagoOk" data-id="${f.id}">Guardar cambio</button><button class="link" id="histPagoNo">Cancelar</button></div>
     </div>
     <div id="histAnularBox" class="cierre no-print" hidden>
       <label>Motivo de la anulación <input id="histMotivo" placeholder="Ej: error de carga, cobro duplicado"></label>
@@ -79,6 +92,17 @@ function verTicket(id) {
     </div>`;
   $("#histVacio").hidden = true; $("#histTicket").hidden = false;
   $("#histDetalle").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+const MEDIOS = ["Efectivo", "Débito", "Crédito", "Transferencia / QR"];
+
+async function cambiarPago(id) {
+  const nuevo = $("#histPagoNuevo").value;
+  const { error } = await db.rpc("cambiar_medio_pago", { p_id: Number(id), p_medio: nuevo });
+  if (error) return aviso(error.code === "PGRST202" ? "Falta ejecutar el script de cambio de pago en Supabase." : error.message, 5000);
+  aviso("Forma de pago cambiada a " + nuevo);
+  await cargar();
+  verTicket(id);
 }
 
 async function anular(id) {
@@ -113,6 +137,9 @@ export function initHistorial() {
       const id = e.target.id;
       if (id === "histImprimir") window.print();
       else if (id === "histAnular") { $("#histAnularBox").hidden = false; $("#histAnular").hidden = true; $("#histMotivo").focus(); }
+      else if (id === "histPagoCambiar") { $("#histPagoBox").hidden = false; e.target.hidden = true; }
+      else if (id === "histPagoNo") { $("#histPagoBox").hidden = true; $("#histPagoCambiar").hidden = false; }
+      else if (id === "histPagoOk") cambiarPago(e.target.dataset.id);
       else if (id === "histAnularNo") { $("#histAnularBox").hidden = true; $("#histAnular").hidden = false; }
       else if (id === "histAnularOk") anular(e.target.dataset.id);
     });

@@ -1,4 +1,5 @@
 import { db } from "./db.js";
+import { confirmar } from "./dialogo.js";
 
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -224,7 +225,7 @@ async function recalcularPrecios(idsInsumos) {
 
 async function borrarFactura(id) {
   const f = fact.find((x) => String(x.id) === String(id));
-  if (!f || !confirm("¿Borrar esta factura? Se pierden sus renglones y su foto.")) return;
+  if (!f || !(await confirmar("¿Borrar esta factura?", { detalle: "Se pierden sus renglones y su foto.", aceptar: "Borrar", peligro: true }))) return;
   const afectados = (f.factura_items || []).map((i) => i.insumo_id);
   const { error } = await db.from("facturas").delete().eq("id", id);
   if (error) return aviso("No se pudo borrar: " + error.message);
@@ -272,7 +273,7 @@ function editarProveedor(id) {
 }
 
 async function borrarProveedor(id) {
-  if (!confirm("¿Borrar este proveedor?")) return;
+  if (!(await confirmar("¿Borrar este proveedor?", { aceptar: "Borrar", peligro: true }))) return;
   const { error } = await db.from("proveedores").delete().eq("id", id);
   if (error) return aviso(/foreign key|violates/i.test(error.message) ? "Tiene facturas cargadas, no se puede borrar. Desmarcá «Activo» para ocultarlo." : "No se pudo borrar: " + error.message, 5000);
   aviso("Proveedor borrado"); await recargar("proveedores");
@@ -326,7 +327,7 @@ function editarInsumo(id) {
 }
 
 async function borrarInsumo(id) {
-  if (!confirm("¿Borrar este insumo? Las facturas ya cargadas se mantienen, pero sus renglones dejan de estar asociados a él.")) return;
+  if (!(await confirmar("¿Borrar este insumo?", { detalle: "Las facturas ya cargadas se mantienen, pero sus renglones dejan de estar asociados a él.", aceptar: "Borrar", peligro: true }))) return;
   const { error } = await db.from("insumos").delete().eq("id", id);
   if (error) return aviso("No se pudo borrar: " + error.message);
   aviso("Insumo borrado"); await recargar("insumos");
@@ -609,7 +610,7 @@ function engancharEventos() {
     if ((el = d("quitar"))) { borrador.items.splice(Number(el.dataset.quitar), 1); return dibujarBorrador(); }
     if (d("agregar-linea")) { borrador.items.push(lineaVacia()); return dibujarBorrador(); }
     if (d("guardar-fact")) return guardarFactura();
-    if (d("cancelar-fact")) { if (confirm("¿Descartar esta factura sin guardar?")) { borrador = null; $("#cfArchivo").value = ""; dibujarBorrador(); } }
+    if (d("cancelar-fact")) { confirmar("¿Descartar esta factura?", { detalle: "Lo que cargaste hasta ahora se pierde.", aceptar: "Descartar", cancelar: "Seguir editando", peligro: true }).then((ok) => { if (ok) { borrador = null; $("#cfArchivo").value = ""; dibujarBorrador(); } }); }
   });
 
   raiz.addEventListener("keydown", (e) => {

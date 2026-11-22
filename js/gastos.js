@@ -1,4 +1,5 @@
 import { db } from "./db.js";
+import { confirmar, preguntar } from "./dialogo.js";
 
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -220,7 +221,7 @@ function editarFijo(id) {
 }
 
 async function borrarFijo(id) {
-  if (!confirm("¿Borrar este gasto fijo? Los pagos que ya anotaste en Salidas se conservan.")) return;
+  if (!(await confirmar("¿Borrar este gasto fijo?", { detalle: "Los pagos que ya anotaste en Salidas se conservan.", aceptar: "Borrar", peligro: true }))) return;
   const { error } = await db.from("gastos_fijos").delete().eq("id", id);
   if (error) return aviso("No se pudo borrar: " + error.message);
   aviso("Gasto fijo borrado"); await recargar("fijos");
@@ -229,7 +230,7 @@ async function borrarFijo(id) {
 async function pagarFijo(id) {
   const g = fijos.find((x) => String(x.id) === String(id));
   if (!g) return;
-  const txt = prompt(`¿Cuánto pagaste de «${g.concepto}»?`, String(g.monto));
+  const txt = await preguntar(`¿Cuánto pagaste de «${g.concepto}»?`, { valor: String(g.monto), inputmode: "decimal", aceptar: "Anotar pago" });
   if (txt === null) return;
   const m = monto(txt);
   if (!(m > 0)) return aviso("Escribí un monto válido.");
@@ -240,7 +241,7 @@ async function pagarFijo(id) {
 
 async function deshacerPago(id) {
   const p = pagoDe(id);
-  if (!p || !confirm("¿Deshacer el pago de este mes? Se borra de Salidas.")) return;
+  if (!p || !(await confirmar("¿Deshacer el pago de este mes?", { detalle: "Se borra de Salidas.", aceptar: "Deshacer pago", peligro: true }))) return;
   const { error } = await db.from("salidas").delete().eq("id", p.id);
   if (error) return aviso("No se pudo deshacer: " + error.message);
   aviso("Pago deshecho"); await recargar("fijos");
@@ -279,7 +280,7 @@ async function guardarSalida() {
 }
 
 async function borrarSalida(id) {
-  if (!confirm("¿Borrar esta salida?")) return;
+  if (!(await confirmar("¿Borrar esta salida?", { aceptar: "Borrar", peligro: true }))) return;
   const { error } = await db.from("salidas").delete().eq("id", id);
   if (error) return aviso("No se pudo borrar: " + error.message);
   aviso("Salida borrada"); await recargar("salidas");

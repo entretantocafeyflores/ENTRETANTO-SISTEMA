@@ -175,8 +175,8 @@ async function cerrar() {
 function verTicket(c, partes) {
   const desc = Number(c.descuento || 0), bruto = Number(c.total) + desc;
   const fecha = new Date(c.cerrada_at).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
-  $("#ticket").innerHTML = `
-    <img class="logo" src="img/logo.png" alt="Entretanto Café y Flores">
+  const cuerpo = `
+    <img class="logo" src="img/logo-ticket.png" alt="Entretanto Café y Flores">
     <p class="t-num">Ticket N° ${String(c.numero_ticket).padStart(6, "0")}</p>
     <p class="t-centro">${fecha} · ${esc(mesa.nombre)}${c.cliente ? " · " + esc(c.cliente) : ""}</p>
     <div class="t-lineas">${items.map((i) => `<div><span>${i.cantidad} × ${esc(i.nombre)}</span><span>${plata(i.precio_unitario * i.cantidad)}</span></div>`).join("")}</div>
@@ -185,11 +185,35 @@ function verTicket(c, partes) {
     ${partes > 1 ? `<p class="t-centro">Dividido en ${partesTxt(c.total, partes)}</p>` : ""}
     <p class="t-centro">${c.comensales} ${c.comensales === 1 ? "comensal" : "comensales"} · Pago: ${esc(c.medio_pago)}</p>
     <p class="t-legal">Documento no válido como factura</p>
+  `;
+  $("#ticket").innerHTML = `
+    <div class="t-copia"><p class="t-rotulo solo-print">ORIGINAL · COMERCIO</p>${cuerpo}</div>
+    <p class="t-corte solo-print">- - - - - cortar aquí - - - - -</p>
+    <div class="t-copia solo-print"><p class="t-rotulo">DUPLICADO · CLIENTE</p>${cuerpo}</div>
     <div class="fila no-print">
-      <button class="principal" id="imprimir">Imprimir ticket</button>
+      <button class="principal" id="imprimir">Imprimir original + duplicado</button>
+      <button id="pagoCambiar">Cambiar forma de pago</button>
       <button class="link" id="volver">Volver a las mesas</button>
+    </div>
+    <div id="pagoBox" class="cierre no-print" hidden>
+      <label>Nueva forma de pago <select id="pagoNuevo">${MEDIOS.map((m) => `<option${m === c.medio_pago ? " selected" : ""}>${m}</option>`).join("")}</select></label>
+      <p class="nota" style="margin-top:0">Si pasa a efectivo se aplica el ${DESC_EFECTIVO}% de descuento; si sale de efectivo, se quita. Solo lo puede hacer un administrador.</p>
+      <div class="fila"><button class="principal" id="pagoOk">Guardar cambio</button><button class="link" id="pagoNo">Cancelar</button></div>
     </div>`;
+  ultimoTicket = { c, partes };
   panel("ticket");
+}
+
+let ultimoTicket = null;
+
+async function cambiarPago() {
+  if (!ultimoTicket) return;
+  const nuevo = $("#pagoNuevo").value;
+  if (nuevo === ultimoTicket.c.medio_pago) { $("#pagoBox").hidden = true; $("#pagoCambiar").hidden = false; return; }
+  const { data, error } = await db.rpc("cambiar_medio_pago", { p_id: ultimoTicket.c.id, p_medio: nuevo });
+  if (error || !data) return aviso(error && error.code === "PGRST202" ? "Falta ejecutar el script de cambio de pago en Supabase." : (error && error.message) || "No se pudo cambiar la forma de pago.", 5000);
+  aviso("Forma de pago cambiada a " + nuevo);
+  verTicket({ ...ultimoTicket.c, ...data }, ultimoTicket.partes);
 }
 
 async function guardarNombre() {
@@ -232,6 +256,9 @@ export function initMesas() {
     else if (b.id === "moverOk") confirmarMover();
     else if (b.id === "cerrar") cerrar();
     else if (b.id === "imprimir") window.print();
+    else if (b.id === "pagoCambiar") { $("#pagoBox").hidden = false; b.hidden = true; }
+    else if (b.id === "pagoNo") { $("#pagoBox").hidden = true; $("#pagoCambiar").hidden = false; }
+    else if (b.id === "pagoOk") cambiarPago();
     else if (b.id === "volver") { mesa = null; panel("vacio"); cargar(); }
     else if (b.id === "liberar") {
       const { error } = await db.from("comandas").delete().eq("id", comandaId);

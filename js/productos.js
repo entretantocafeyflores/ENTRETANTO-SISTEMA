@@ -1,4 +1,5 @@
 import { db } from "./db.js";
+import { confirmar } from "./dialogo.js";
 
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -89,7 +90,7 @@ export function initProductos() {
       $("#formTitulo").textContent = "Editar producto"; $("#cancelar").hidden = false;
       $("#prodNombre").focus();
     }
-    if (del && confirm("¿Borrar este producto? Las ventas ya hechas no se modifican.")) {
+    if (del && (await confirmar("¿Borrar este producto?", { detalle: "Las ventas ya hechas no se modifican.", aceptar: "Borrar", peligro: true }))) {
       const { error } = await db.from("productos").delete().eq("id", del);
       aviso(error ? "No se pudo borrar." : "Producto borrado"); cargar();
     }

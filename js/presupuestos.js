@@ -1,4 +1,5 @@
 import { db } from "./db.js";
+import { confirmar } from "./dialogo.js";
 
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -244,7 +245,7 @@ async function duplicar(id) {
 }
 
 async function eliminar(id) {
-  if (!confirm("¿Eliminar este presupuesto? No se puede deshacer.")) return;
+  if (!(await confirmar("¿Eliminar este presupuesto?", { detalle: "No se puede deshacer.", aceptar: "Eliminar", peligro: true }))) return;
   const { error } = await db.from("presupuestos").delete().eq("id", id);
   if (error) return aviso("No se pudo eliminar: " + error.message);
   aviso("Presupuesto eliminado");
@@ -339,7 +340,7 @@ function enganchar() {
     if (d("pr-volver")) return ir("lista");
     if ((el = d("pr-pdf"))) return descargarPDF(el);
     if (d("pr-imprimir")) return window.print();
-    if (d("pr-cancelar")) { if (confirm("¿Salir sin guardar los cambios?")) { borrador = null; ir("lista"); } return; }
+    if (d("pr-cancelar")) { confirmar("¿Salir sin guardar?", { detalle: "Los cambios que hiciste en este presupuesto se pierden.", aceptar: "Salir sin guardar", cancelar: "Seguir editando", peligro: true }).then((ok) => { if (ok) { borrador = null; ir("lista"); } }); return; }
     if (d("pr-guardar")) return guardar();
     if (d("pr-add-sec")) { borrador.secciones.push({ titulo: "", cuerpo: "" }); return pintar(); }
     if ((el = d("pr-quitar-sec"))) { borrador.secciones.splice(Number(el.dataset.prQuitarSec), 1); return pintar(); }
