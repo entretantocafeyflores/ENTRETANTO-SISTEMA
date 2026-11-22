@@ -381,3 +381,37 @@ textarea:focus { border-color: var(--dorado); box-shadow: 0 0 0 3px rgba(217, 17
   .pr-doc { border: none; border-radius: 0; max-width: none; padding: 0; }
   .pr-doc table, .pr-doc tr, .pr-sec, .pr-firmas { break-inside: avoid; }
 }
+
+/* ====== TICKET PARA IMPRESORA TÉRMICA: todo en negro, letra firme y sin grises ====== */
+@media print {
+  #ticket, #histTicket { font-family: Arial, Helvetica, sans-serif; font-weight: 700; }
+  #ticket *, #histTicket * { color: #000 !important; text-shadow: none !important; }
+  #ticket .t-centro, #histTicket .t-centro { font-size: 1rem; font-weight: 700; }
+  #ticket .t-num, #histTicket .t-num, #ticket .t-total, #histTicket .t-total { font-family: Arial, Helvetica, sans-serif; font-weight: 800; }
+  #ticket .t-lineas, #histTicket .t-lineas { border-top: 2px dashed #000; border-bottom: 2px dashed #000; font-size: 1rem; }
+  #ticket .t-legal, #histTicket .t-legal { font-size: .85rem; }
+  #ticket .t-anulado, #histTicket .t-anulado { background: none; border: 2px solid #000; border-radius: 0; }
+  #ticket .logo, #histTicket .logo { width: 130px; }
+}
+
+/* ====== TICKET: ORIGINAL (comercio) + DUPLICADO (cliente) ====== */
+#ticket .t-copia:not(.solo-print) { display: flex; flex-direction: column; gap: 10px; }
+@media print {
+  #ticket .t-copia.solo-print { gap: 10px; margin: 0; }
+  #ticket .t-rotulo { margin: 0; text-align: center; font-size: 1rem; font-weight: 800; letter-spacing: .05em; border: 2px solid #000; padding: 4px 0; }
+  #ticket .t-corte { margin: 22px 0; text-align: center; font-size: .9rem; font-weight: 700; }
+}
+
+/* ====== CARTELES DE CONFIRMACIÓN ====== */
+.dialogo-fondo { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(80, 60, 53, .45); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); animation: dlgFondo .15s ease-out; }
+.dialogo { width: 100%; max-width: 420px; background: var(--panel); border: 1.5px solid var(--arena); border-radius: var(--radio); box-shadow: 0 20px 50px rgba(80, 60, 53, .28); padding: 28px 26px 22px; text-align: center; animation: dlgEntra .18s ease-out; }
+.dialogo h2 { margin: 0 0 8px; font-family: var(--contenido); font-size: 1.55rem; line-height: 1.2; color: var(--cafe); }
+.dialogo p { margin: 0 0 20px; color: var(--cafe-suave); font-size: .98rem; line-height: 1.45; }
+.dialogo input { width: 100%; margin: 12px 0 20px; text-align: center; }
+.dialogo-botones { display: flex; flex-wrap: wrap-reverse; gap: 10px; justify-content: center; }
+.dialogo-botones button { flex: 1 1 130px; }
+.dialogo:not(:has(p)) h2 { margin-bottom: 22px; }
+@keyframes dlgFondo { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dlgEntra { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .dialogo-fondo, .dialogo { animation: none; } }
+@media print { .dialogo-fondo { display: none !important; } }
