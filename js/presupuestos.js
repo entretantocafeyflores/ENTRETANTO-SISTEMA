@@ -1,4 +1,5 @@
 import { db } from "./db.js";
+import { imprimirNormal } from "./impresion.js";
 import { confirmar } from "./dialogo.js";
 
 const $ = (s) => document.querySelector(s);
@@ -339,7 +340,7 @@ function enganchar() {
     if ((el = d("pr-abrir"))) { const r = porId(el.dataset.prAbrir); if (r) { actual = desdeFila(r); ir("doc"); } return; }
     if (d("pr-volver")) return ir("lista");
     if ((el = d("pr-pdf"))) return descargarPDF(el);
-    if (d("pr-imprimir")) return window.print();
+    if (d("pr-imprimir")) return imprimirNormal();
     if (d("pr-cancelar")) { confirmar("¿Salir sin guardar?", { detalle: "Los cambios que hiciste en este presupuesto se pierden.", aceptar: "Salir sin guardar", cancelar: "Seguir editando", peligro: true }).then((ok) => { if (ok) { borrador = null; ir("lista"); } }); return; }
     if (d("pr-guardar")) return guardar();
     if (d("pr-add-sec")) { borrador.secciones.push({ titulo: "", cuerpo: "" }); return pintar(); }

@@ -1,4 +1,5 @@
 import { db } from "./db.js";
+import { imprimirNormal } from "./impresion.js";
 
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -153,7 +154,7 @@ export function initEstadisticas() {
       cargar();
     }));
     $("#estBuscar").addEventListener("input", dibujar);
-    $("#estImprimir").addEventListener("click", () => window.print());
+    $("#estImprimir").addEventListener("click", () => imprimirNormal());
     $("#estExcel").addEventListener("click", excel);
   }
   elegir("mes");

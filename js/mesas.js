@@ -1,4 +1,5 @@
 import { db } from "./db.js";
+import { imprimirTicket } from "./impresion.js";
 
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -188,7 +189,6 @@ function verTicket(c, partes) {
   `;
   $("#ticket").innerHTML = `
     <div class="t-copia"><p class="t-rotulo solo-print">ORIGINAL · COMERCIO</p>${cuerpo}</div>
-    <p class="t-corte solo-print">- - - - - cortar aquí - - - - -</p>
     <div class="t-copia solo-print"><p class="t-rotulo">DUPLICADO · CLIENTE</p>${cuerpo}</div>
     <div class="fila no-print">
       <button class="principal" id="imprimir">Imprimir original + duplicado</button>
@@ -255,7 +255,7 @@ export function initMesas() {
     else if (b.id === "moverNo") { moviendo = false; mov = {}; dibujarComanda(); }
     else if (b.id === "moverOk") confirmarMover();
     else if (b.id === "cerrar") cerrar();
-    else if (b.id === "imprimir") window.print();
+    else if (b.id === "imprimir") imprimirTicket();
     else if (b.id === "pagoCambiar") { $("#pagoBox").hidden = false; b.hidden = true; }
     else if (b.id === "pagoNo") { $("#pagoBox").hidden = true; $("#pagoCambiar").hidden = false; }
     else if (b.id === "pagoOk") cambiarPago();

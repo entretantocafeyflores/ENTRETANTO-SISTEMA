@@ -1,4 +1,5 @@
 import { db } from "./db.js";
+import { imprimirTicket } from "./impresion.js";
 import { periodo, sumarDias } from "./estadisticas.js";
 
 const $ = (s) => document.querySelector(s);
@@ -135,7 +136,7 @@ export function initHistorial() {
     $("#histLista").addEventListener("keydown", (e) => { const r = e.target.closest("[data-ticket]"); if (r && e.key === "Enter") verTicket(r.dataset.ticket); });
     $("#histDetalle").addEventListener("click", (e) => {
       const id = e.target.id;
-      if (id === "histImprimir") window.print();
+      if (id === "histImprimir") imprimirTicket();
       else if (id === "histAnular") { $("#histAnularBox").hidden = false; $("#histAnular").hidden = true; $("#histMotivo").focus(); }
       else if (id === "histPagoCambiar") { $("#histPagoBox").hidden = false; e.target.hidden = true; }
       else if (id === "histPagoNo") { $("#histPagoBox").hidden = true; $("#histPagoCambiar").hidden = false; }
