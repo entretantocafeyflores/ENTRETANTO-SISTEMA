@@ -95,7 +95,7 @@ function verTicket(id) {
   $("#histDetalle").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-const MEDIOS = ["Efectivo", "Débito", "Crédito", "Transferencia / QR"];
+const MEDIOS = ["Efectivo", "Posnet", "Transferencia"];
 
 async function cambiarPago(id) {
   const nuevo = $("#histPagoNuevo").value;

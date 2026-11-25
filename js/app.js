@@ -102,6 +102,19 @@ $("#loginForm").addEventListener("submit", async (e) => {
   if (error) $("#loginError").textContent = "Email o contraseña incorrectos.";
 });
 
+// Menú de la izquierda: se puede ocultar para tener más lugar (queda guardado en este dispositivo)
+(function menuPlegable() {
+  const app = $("#app"), btn = $("#menuToggle");
+  let chico = false;
+  try { chico = localStorage.getItem("menuChico") === "1"; } catch { /* sin almacenamiento: queda abierto */ }
+  const aplicar = () => { app.classList.toggle("menu-chico", chico); btn.textContent = chico ? "☰" : "‹"; btn.setAttribute("aria-expanded", String(!chico)); };
+  aplicar();
+  btn.addEventListener("click", () => {
+    chico = !chico; aplicar();
+    try { localStorage.setItem("menuChico", chico ? "1" : "0"); } catch { /* idem */ }
+  });
+})();
+
 $("#salir").addEventListener("click", () => {
   $("#password").value = "";
   db.auth.signOut();
