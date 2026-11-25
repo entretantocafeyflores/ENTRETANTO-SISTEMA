@@ -4,7 +4,7 @@ import { imprimirTicket } from "./impresion.js";
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const plata = (n) => "$ " + Number(n).toLocaleString("es-AR", { maximumFractionDigits: 2 });
-const MEDIOS = ["Efectivo", "Débito", "Crédito", "Transferencia / QR"];
+const MEDIOS = ["Efectivo", "Posnet", "Transferencia"];
 const DESC_EFECTIVO = 10; // % de descuento en efectivo: tiene que coincidir con el del script SQL (0.10)
 const descuentoDe = (total, medio) => (medio === "Efectivo" ? Math.round(total * DESC_EFECTIVO) / 100 : 0);
 
@@ -85,7 +85,7 @@ async function abrirMesa(id) {
   await cargarItems();
   panel("edit");
   dibujarMesas();
-  $("#comanda").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (window.innerWidth < 1100) $("#comanda").scrollIntoView({ behavior: "smooth", block: "start" }); // en pantalla grande ya se ve todo junto
   if (nueva) $("#cliente").focus({ preventScroll: true }); // mesa nueva: queda lista para escribir el nombre
 }
 
@@ -102,7 +102,7 @@ function dibujarComanda() {
   const total = abiertas[mesa.id].total;
   $("#comandaTitulo").textContent = abiertas[mesa.id].cliente ? `${mesa.nombre} · ${abiertas[mesa.id].cliente}` : mesa.nombre;
   $("#chips").innerHTML = [{ id: "", nombre: "Todo" }, ...cats].map((c) =>
-    `<button class="chip ${String(c.id) === catSel ? "activa" : ""}" data-cat="${c.id}">${esc(c.nombre)}</button>`).join("");
+    `<button class="cat ${String(c.id) === catSel ? "activa" : ""}" data-cat="${c.id}">${esc(c.nombre)}</button>`).join("");
   $("#prods").innerHTML = prods.filter((p) => !catSel || String(p.categoria_id) === catSel).map((p) =>
     `<button class="prod" data-prod="${p.id}">${esc(p.nombre)}<small>${plata(p.precio)}</small></button>`).join("");
   $("#items").innerHTML = items.length
@@ -187,11 +187,9 @@ function verTicket(c, partes) {
     <p class="t-centro">${c.comensales} ${c.comensales === 1 ? "comensal" : "comensales"} · Pago: ${esc(c.medio_pago)}</p>
     <p class="t-legal">Documento no válido como factura</p>
   `;
-  $("#ticket").innerHTML = `
-    <div class="t-copia"><p class="t-rotulo solo-print">ORIGINAL · COMERCIO</p>${cuerpo}</div>
-    <div class="t-copia solo-print"><p class="t-rotulo">DUPLICADO · CLIENTE</p>${cuerpo}</div>
+  $("#ticket").innerHTML = `${cuerpo}
     <div class="fila no-print">
-      <button class="principal" id="imprimir">Imprimir original + duplicado</button>
+      <button class="principal" id="imprimir">Imprimir ticket</button>
       <button id="pagoCambiar">Cambiar forma de pago</button>
       <button class="link" id="volver">Volver a las mesas</button>
     </div>
