@@ -36,6 +36,7 @@
     <nav id="menu" aria-label="Módulos"></nav>
     <button id="salir" class="link">Salir</button>
   </aside>
+  <button id="menuToggle" class="menu-toggle" type="button" aria-label="Mostrar u ocultar el menú" title="Mostrar u ocultar el menú">‹</button>
 
   <div class="principal-area" data-vista="productos" hidden>
     <header class="encabezado">
@@ -98,9 +99,12 @@
         <div id="comandaEdit" hidden>
           <h2 id="comandaTitulo"></h2>
           <label>A nombre de (opcional) <input id="cliente" maxlength="40" placeholder="Ej: Mirna" autocomplete="off"></label>
-          <div id="chips" class="chips"></div>
-          <div id="prods" class="prods"></div>
-
+          <div class="comanda-cols">
+          <div class="selector">
+            <div id="chips" class="cats"></div>
+            <div id="prods" class="prods"></div>
+          </div>
+          <div class="pedido">
           <h2 class="subtitulo">Pedido</h2>
           <div id="items"></div>
           <button id="pasar" class="link" hidden>Pasar productos a otra mesa</button>
@@ -126,6 +130,8 @@
             <button id="cerrar" class="principal">Cerrar mesa y emitir ticket</button>
           </div>
           <button id="liberar" class="link" hidden>Liberar mesa</button>
+          </div>
+          </div>
         </div>
 
         <div id="ticket" hidden></div>
