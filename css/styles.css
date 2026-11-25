@@ -423,3 +423,40 @@ textarea:focus { border-color: var(--dorado); box-shadow: 0 0 0 3px rgba(217, 17
   #ticket .t-copia, #ticket .t-copia.solo-print { gap: 6px; }
   #ticket .t-rotulo { font-size: .8rem; padding: 2px 0; margin-bottom: 6px; }
 }
+
+/* ====== MESAS EN EL LUGAR DE SIEMPRE (2 columnas de 10) · PRODUCTOS EN CUADRADITOS ====== */
+.mesas-grid .mesa { min-height: 72px; font-size: 1.3rem; text-align: center; overflow-wrap: anywhere; overflow: hidden; }
+.mesas-grid .mesa small { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (min-width: 1100px) { .mesas-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+#comanda { container-type: inline-size; }
+.comanda-cols { display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); margin-top: 16px; }
+.selector { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.cats { display: flex; flex-wrap: wrap; gap: 10px; }
+.cat { flex: 1 1 110px; min-height: 64px; padding: 10px 12px; border-radius: 16px; background: var(--hueso); border: 1.5px solid var(--arena); font-family: var(--contenido); font-weight: 700; font-size: 1.15rem; line-height: 1.1; text-align: center; }
+.cat:hover { background: var(--arena); }
+.cat.activa { background: var(--dorado); border-color: var(--dorado); }
+.prods { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.prod { min-height: 84px; }
+.pedido .subtitulo { margin-top: 0; }
+/* El diseño se adapta al ancho que tenga el panel (cambia solo al ocultar el menú de la izquierda) */
+@container (min-width: 560px) {
+  .selector { grid-template-columns: 150px minmax(0, 1fr); }
+  .cats { flex-direction: column; }
+  .cats .cat { flex: none; }
+}
+@container (min-width: 900px) {
+  .comanda-cols { grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); }
+  .pedido { position: sticky; top: 14px; align-self: start; max-height: calc(100vh - 28px); overflow-y: auto; }
+}
+@media screen { #ticket { max-width: 460px; margin: 0 auto; } }
+
+.menu-toggle { position: fixed; top: 12px; left: 252px; z-index: 30; width: 38px; min-height: 38px; padding: 0; border-radius: 12px; background: var(--panel); border: 1.5px solid var(--arena); box-shadow: var(--sombra); font-size: 1.15rem; line-height: 1; }
+@media (min-width: 861px) {
+  #app.menu-chico:not([hidden]) { grid-template-columns: minmax(0, 1fr); }
+  #app.menu-chico .lateral { display: none; }
+  #app.menu-chico .menu-toggle { left: 12px; }
+  #app.menu-chico .encabezado { padding-left: 64px; }
+}
+@media (max-width: 860px) { .menu-toggle { display: none; } }
+@media print { .menu-toggle { display: none !important; } }
