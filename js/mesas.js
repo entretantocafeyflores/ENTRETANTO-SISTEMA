@@ -8,6 +8,13 @@ const MEDIOS = ["Efectivo", "Posnet", "Transferencia"];
 const DESC_EFECTIVO = 10; // % de descuento en efectivo: tiene que coincidir con el del script SQL (0.10)
 const descuentoDe = (total, medio) => (medio === "Efectivo" ? Math.round(total * DESC_EFECTIVO) / 100 : 0);
 
+// Un color suave para cada categoría (siempre el mismo según su lugar en la lista)
+const PALETA = ["#E3B7B0", "#B8C4A8", "#ADB8BC", "#D9B382", "#C6B7D3", "#E8C9A0", "#A9C5C0", "#D8A7A7"];
+const tinte = (hex, k = 0.55) => {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgb(${[n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v + (255 - v) * k)).join(",")})`;
+};
+
 let mesas = [], cats = [], prods = [], abiertas = {}, items = [];
 let mesa = null, comandaId = null, catSel = "", iniciado = false;
 let moviendo = false, mov = {};
@@ -78,7 +85,7 @@ async function abrirMesa(id) {
     if (error) return aviso("No se pudo abrir la mesa.");
     comandaId = data.id;
   }
-  catSel = "";
+  catSel = cats.length ? String(cats[0].id) : ""; // arranca en la primera categoría (la de arriba de todo)
   moviendo = false; mov = {};
   $("#comensales").value = ""; $("#partes").value = 1;
   $("#cliente").value = (abiertas[id] && abiertas[id].cliente) || "";
@@ -98,13 +105,20 @@ async function cargarItems() {
   dibujarMesas();
 }
 
+function colorDe(catId) {
+  const i = cats.findIndex((c) => String(c.id) === String(catId));
+  if (i < 0) return "";
+  const h = PALETA[i % PALETA.length];
+  return `--c:${h};--ct:${tinte(h)};`;
+}
+
 function dibujarComanda() {
   const total = abiertas[mesa.id].total;
   $("#comandaTitulo").textContent = abiertas[mesa.id].cliente ? `${mesa.nombre} · ${abiertas[mesa.id].cliente}` : mesa.nombre;
-  $("#chips").innerHTML = [{ id: "", nombre: "Todo" }, ...cats].map((c) =>
-    `<button class="cat ${String(c.id) === catSel ? "activa" : ""}" data-cat="${c.id}">${esc(c.nombre)}</button>`).join("");
+  $("#chips").innerHTML = [...cats, { id: "", nombre: "Todo" }].map((c) =>
+    `<button class="cat${c.id === "" ? " cat-todo" : ""}${String(c.id) === catSel ? " activa" : ""}" data-cat="${c.id}" style="${colorDe(c.id)}">${esc(c.nombre)}</button>`).join("");
   $("#prods").innerHTML = prods.filter((p) => !catSel || String(p.categoria_id) === catSel).map((p) =>
-    `<button class="prod" data-prod="${p.id}">${esc(p.nombre)}<small>${plata(p.precio)}</small></button>`).join("");
+    `<button class="prod" data-prod="${p.id}" style="${colorDe(p.categoria_id)}">${esc(p.nombre)}<small>${plata(p.precio)}</small></button>`).join("");
   $("#items").innerHTML = items.length
     ? items.map((i) => `<div class="item"><div>${esc(i.nombre)}<small>${plata(i.precio_unitario)} c/u</small></div>
         <div class="cant"><button data-menos="${i.id}" aria-label="Quitar uno">−</button><b>${i.cantidad}</b><button data-mas="${i.id}" aria-label="Sumar uno">+</button></div></div>`).join("")
