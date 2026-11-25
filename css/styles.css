@@ -433,11 +433,14 @@ textarea:focus { border-color: var(--dorado); box-shadow: 0 0 0 3px rgba(217, 17
 .comanda-cols { display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); margin-top: 16px; }
 .selector { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 .cats { display: flex; flex-wrap: wrap; gap: 10px; }
-.cat { flex: 1 1 110px; min-height: 64px; padding: 10px 12px; border-radius: 16px; background: var(--hueso); border: 1.5px solid var(--arena); font-family: var(--contenido); font-weight: 700; font-size: 1.15rem; line-height: 1.1; text-align: center; }
-.cat:hover { background: var(--arena); }
-.cat.activa { background: var(--dorado); border-color: var(--dorado); }
+.cat { flex: 1 1 110px; min-height: 64px; padding: 10px 12px; border-radius: 16px; background: var(--ct, var(--hueso)); border: 2px solid var(--c, var(--arena)); font-family: var(--contenido); font-weight: 700; font-size: 1.15rem; line-height: 1.1; text-align: center; }
+.cat:hover { filter: brightness(.95); }
+.cat.activa { background: var(--c, var(--arena)); border-color: var(--cafe); box-shadow: 0 0 0 2px var(--cafe); }
+.cat-todo { background: var(--hueso); border-color: var(--arena); }
+.cat-todo.activa { background: var(--cafe); border-color: var(--cafe); color: var(--hueso); }
 .prods { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-.prod { min-height: 84px; }
+.prod { min-height: 84px; background: var(--ct, var(--hueso)); border-left: 7px solid var(--c, var(--arena)); }
+.prod:hover { background: var(--ct, var(--arena)); filter: brightness(.95); }
 .pedido .subtitulo { margin-top: 0; }
 /* El diseño se adapta al ancho que tenga el panel (cambia solo al ocultar el menú de la izquierda) */
 @container (min-width: 560px) {
