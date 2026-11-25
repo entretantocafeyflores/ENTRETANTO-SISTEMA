@@ -424,29 +424,36 @@ textarea:focus { border-color: var(--dorado); box-shadow: 0 0 0 3px rgba(217, 17
   #ticket .t-rotulo { font-size: .8rem; padding: 2px 0; margin-bottom: 6px; }
 }
 
-/* ====== MESAS EN EL LUGAR DE SIEMPRE (2 columnas de 10) · PRODUCTOS EN CUADRADITOS ====== */
+/* ====== MESAS EN EL LUGAR DE SIEMPRE (2 columnas de 10) · CATEGORÍAS Y PRODUCTOS EN CUADRADITOS COMPACTOS ====== */
 .mesas-grid .mesa { min-height: 72px; font-size: 1.3rem; text-align: center; overflow-wrap: anywhere; overflow: hidden; }
 .mesas-grid .mesa small { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (min-width: 1100px) { .mesas-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 #comanda { container-type: inline-size; }
-.comanda-cols { display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); margin-top: 16px; }
-.selector { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); align-items: start; }
-.cats { display: flex; flex-wrap: wrap; gap: 10px; }
-.cat { flex: 1 1 110px; min-height: 64px; padding: 10px 12px; border-radius: 16px; background: var(--ct, var(--hueso)); border: 2px solid var(--c, var(--arena)); font-family: var(--contenido); font-weight: 700; font-size: 1.15rem; line-height: 1.1; text-align: center; }
+.comanda-cols { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); margin-top: 14px; }
+.selector { display: flex; flex-direction: column; gap: 12px; }
+
+/* Categorías: grilla de 4 columnas, bien compacta (3 filas alcanzan para 12 categorías) */
+.cats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.cat { min-height: 46px; padding: 6px 8px; border-radius: 14px; background: var(--ct, var(--hueso)); border: 2px solid var(--c, var(--arena)); font-family: var(--contenido); font-weight: 700; font-size: 1.02rem; line-height: 1.1; text-align: center; overflow-wrap: anywhere; }
 .cat:hover { filter: brightness(.95); }
 .cat.activa { background: var(--c, var(--arena)); border-color: var(--cafe); box-shadow: 0 0 0 2px var(--cafe); }
 .cat-todo { background: var(--hueso); border-color: var(--arena); }
 .cat-todo.activa { background: var(--cafe); border-color: var(--cafe); color: var(--hueso); }
-.prods { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-.prod { min-height: 84px; background: var(--ct, var(--hueso)); border-left: 7px solid var(--c, var(--arena)); }
+
+/* Productos: también 4 columnas, para que quede todo arriba y el pedido se vea sin bajar tanto */
+.prods { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.prod { min-height: 64px; padding: 8px 10px; border-radius: 14px; font-size: 1rem; background: var(--ct, var(--hueso)); border-left: 6px solid var(--c, var(--arena)); overflow-wrap: anywhere; }
+.prod small { font-size: .76rem; }
 .prod:hover { background: var(--ct, var(--arena)); filter: brightness(.95); }
 .pedido .subtitulo { margin-top: 0; }
+
 /* El diseño se adapta al ancho que tenga el panel (cambia solo al ocultar el menú de la izquierda) */
-@container (min-width: 560px) {
-  .selector { grid-template-columns: 150px minmax(0, 1fr); }
-  .cats { flex-direction: column; }
-  .cats .cat { flex: none; }
+@container (max-width: 520px) {
+  .cats, .prods { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@container (max-width: 380px) {
+  .cats, .prods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @container (min-width: 900px) {
   .comanda-cols { grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); }
