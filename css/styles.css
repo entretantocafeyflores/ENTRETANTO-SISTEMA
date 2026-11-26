@@ -470,3 +470,19 @@ textarea:focus { border-color: var(--dorado); box-shadow: 0 0 0 3px rgba(217, 17
 }
 @media (max-width: 860px) { .menu-toggle { display: none; } }
 @media print { .menu-toggle { display: none !important; } }
+
+/* ====== CAJA: CIERRE POR TURNO ====== */
+.cj-dif { display: inline-block; padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: .95rem; white-space: nowrap; }
+.cj-ok { background: var(--arena); color: var(--cafe); }
+.cj-falta { background: var(--dorado); color: var(--cafe); }
+.cj-sobra { background: var(--celeste); color: var(--cafe); }
+.cj-bloque { display: flex; flex-direction: column; gap: 10px; background: var(--hueso); border-radius: 16px; padding: 16px; margin: 12px 0; }
+.cj-esperado { margin: 0; font-size: .98rem; }
+.cj-esperado b { font-family: var(--contenido); font-size: 1.4rem; }
+.cj-total { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 6px 0 16px; }
+.cj-total p { margin: 0; font-weight: 600; }
+.cj-total:empty { display: none; }
+.cj-cerrado { background: var(--dorado); border-radius: 14px; padding: 12px 16px; margin: 6px 0 14px; text-align: center; }
+.cj-detalle { margin-top: 12px; }
+.cj-detalle summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
+@media print { [data-vista="caja"] { display: none !important; } }
