@@ -13,7 +13,8 @@ function abrir({ titulo, detalle = "", aceptar = "Aceptar", cancelar = "Cancelar
       <div class="dialogo${peligro ? " peligro" : ""}" role="dialog" aria-modal="true" aria-labelledby="dlgTitulo">
         <h2 id="dlgTitulo">${esc(titulo)}</h2>
         ${detalle ? `<p>${esc(detalle)}</p>` : ""}
-        ${campo ? `<input id="dlgCampo" value="${esc(campo.valor ?? "")}" placeholder="${esc(campo.placeholder ?? "")}" inputmode="${esc(campo.inputmode ?? "text")}" autocomplete="off">` : ""}
+        ${campo && campo.opciones ? `<select id="dlgCampo">${campo.opciones.map((o) => `<option${o === campo.valor ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>` : ""}
+        ${campo && !campo.opciones ? `<input id="dlgCampo" value="${esc(campo.valor ?? "")}" placeholder="${esc(campo.placeholder ?? "")}" inputmode="${esc(campo.inputmode ?? "text")}" autocomplete="off">` : ""}
         <div class="dialogo-botones">
           <button type="button" class="dlg-no">${esc(cancelar)}</button>
           <button type="button" class="principal dlg-si">${esc(aceptar)}</button>
@@ -55,10 +56,12 @@ function abrir({ titulo, detalle = "", aceptar = "Aceptar", cancelar = "Cancelar
     document.body.appendChild(fondo);
 
     // Al borrar algo, el foco arranca en "Cancelar" para que un Enter distraído no borre.
-    if (input) { input.focus(); input.select(); } else (peligro ? no : si).focus();
+    if (input) { input.focus(); if (input.select) input.select(); } else (peligro ? no : si).focus();
   });
 }
 
 export const confirmar = (titulo, opciones = {}) => abrir({ titulo, ...opciones });
+// Para elegir una opción de una lista: devuelve la opción elegida, o null si cancela.
+export const elegir = (titulo, { opciones = [], valor = "", ...resto } = {}) => abrir({ titulo, campo: { opciones, valor }, ...resto });
 export const preguntar = (titulo, { valor = "", placeholder = "", inputmode = "text", ...resto } = {}) =>
   abrir({ titulo, campo: { valor, placeholder, inputmode }, ...resto });

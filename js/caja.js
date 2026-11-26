@@ -1,5 +1,5 @@
 import { db } from "./db.js";
-import { confirmar } from "./dialogo.js";
+import { confirmar, elegir } from "./dialogo.js";
 import { TURNOS, ORDEN_MEDIOS, grupoMedio, ventanaTurno, turnoActual, diaDeTurno, hoyAR } from "./medios.js";
 
 const $ = (s) => document.querySelector(s);
@@ -18,7 +18,8 @@ const diaHora = (iso) => new Date(iso).toLocaleString("es-AR", { day: "numeric",
 const nombreTurno = (id) => (TURNOS.find((t) => t.id === id) || {}).nombre || id;
 const rangoTurno = (id) => { const t = TURNOS.find((x) => x.id === id); return `${t.desde} a ${t.hasta}`; };
 
-let iniciado = false, sec = "cerrar", yo = { nombre: "", rol: "" };
+let iniciado = false, sec = "cerrar", yo = { nombre: "", rol: "", turno: "" };
+const esAdmin = () => yo.rol === "admin";
 let datos = null;     // lo calculado para el turno que se está mirando
 let cierre = null;    // el cierre ya guardado de ese turno (si existe)
 let ultimoDeja = 0;   // lo que quedó en caja en el último cierre
@@ -68,9 +69,9 @@ async function cargarTurno() {
     leerTickets(desde, hasta),
     db.from("mesas").select("id, nombre"),
     db.from("cierres_caja").select("*").eq("fecha", fecha).eq("turno", turno).maybeSingle(),
-    db.from("cierres_caja").select("deja_en_caja").order("fecha", { ascending: false }).order("creado_at", { ascending: false }).limit(1),
+    db.rpc("fondo_sugerido"),
   ]);
-  const err = t.error || c.error || u.error;
+  const err = t.error || c.error;
   if (err) { $("#cjCont").innerHTML = ""; return errorFalta(err); }
   const mesas = Object.fromEntries((m.data || []).map((x) => [x.id, x.nombre]));
   const tickets = t.data || [];
@@ -79,7 +80,7 @@ async function cargarTurno() {
   validos.forEach((x) => { const g = grupoMedio(x.medio_pago); (porMedio[g] ||= { mesas: 0, ventas: 0 }); porMedio[g].mesas++; porMedio[g].ventas += Number(x.total || 0); });
   datos = { fecha, turno, tickets, validos, anulados: tickets.length - validos.length, porMedio, mesas };
   cierre = c.data || null;
-  ultimoDeja = u.data && u.data[0] ? Number(u.data[0].deja_en_caja || 0) : 0;
+  ultimoDeja = u.error ? 0 : Number(u.data) || 0;
   pintarTurno();
 }
 
@@ -93,7 +94,7 @@ function ticketsHtml() {
     if (x.medio_original && x.medio_original !== x.medio_pago) marcas.push(`cambió de ${esc(x.medio_original)} a ${esc(x.medio_pago)}`);
     const mesa = esc(datos.mesas[x.mesa_id] || "Mesa") + (x.cliente ? " · " + esc(x.cliente) : "");
     return `<div class="item ${marcas.length ? "urgente" : ""}"><div>Ticket ${String(x.numero_ticket ?? "").padStart(4, "0")} · ${mesa}<small>${hora(x.cerrada_at)} · ${esc(grupoMedio(x.medio_pago))}${marcas.length ? " · " + marcas.join(" · ") : ""}</small></div>
-      <div class="num"><span${x.anulada_at ? ' style="text-decoration:line-through"' : ""}>${plata(x.total)}</span></div></div>`;
+      <div class="num"><span${x.anulada_at ? ' style="text-decoration:line-through"' : ""}>${plata(x.total)}</span>${!x.anulada_at && !cierre ? `<button data-cj-pago="${x.id}">Cambiar pago</button>` : ""}</div></div>`;
   }).join("");
 }
 
@@ -109,6 +110,23 @@ function ventasHtml() {
       <div class="item destacado"><div>Total vendido<small>${datos.validos.length} ${datos.validos.length === 1 ? "mesa" : "mesas"}${datos.anulados ? ` · ${datos.anulados} anulada${datos.anulados === 1 ? "" : "s"} (no cuentan)` : ""}</small></div><div class="num"><span>${plata(total)}</span></div></div>
     </div>
     <details class="cj-detalle"><summary>Ver las mesas del turno</summary><div class="lista-est co-lista">${ticketsHtml()}</div></details>`;
+}
+
+// Corregir la forma de pago de una mesa del turno (mientras la caja del turno no esté cerrada)
+async function cambiarPago(id) {
+  const x = datos.tickets.find((t) => String(t.id) === String(id));
+  if (!x) return;
+  const actual = grupoMedio(x.medio_pago);
+  const nuevo = await elegir("¿Con qué pagaron realmente?", {
+    opciones: ORDEN_MEDIOS, valor: ORDEN_MEDIOS.includes(actual) ? actual : ORDEN_MEDIOS[0],
+    detalle: `Ticket ${String(x.numero_ticket ?? "").padStart(4, "0")} · ${plata(x.total)}. Si pasa a efectivo se aplica el 10% de descuento; si sale de efectivo, se quita. Queda anotado quién hizo el cambio.`,
+    aceptar: "Guardar cambio",
+  });
+  if (nuevo === null || nuevo === actual) return;
+  const { error } = await db.rpc("cambiar_medio_pago", { p_id: x.id, p_medio: nuevo });
+  if (error) return aviso(error.code === "PGRST202" ? "Falta ejecutar el script de cambio de pago en Supabase." : error.message, 6000);
+  aviso("Forma de pago cambiada a " + nuevo);
+  await cargarTurno();
 }
 
 // ====== PANTALLA DEL TURNO ======
@@ -191,7 +209,7 @@ function pintarCerrado(cab) {
     <p class="t-centro">Fondo inicial ${plata(c.fondo_inicial)} · Salió de la caja ${plata(c.retiros)} · Quedó en la caja ${plata(c.deja_en_caja)} · ${c.tickets} mesas${c.anulados ? ` (${c.anulados} anuladas)` : ""}</p>
     ${c.notas ? `<p class="t-centro">Nota: ${esc(c.notas)}</p>` : ""}
     ${ventasHtml()}
-    ${yo.rol === "admin" ? `<div class="fila"><button class="link" id="cjReabrir">Borrar este cierre para volver a hacerlo</button></div>` : ""}`;
+    ${esAdmin() ? `<div class="fila"><button class="link" id="cjReabrir">Borrar este cierre para volver a hacerlo</button></div>` : ""}`;
 }
 
 // ====== GUARDAR EL CIERRE ======
@@ -252,10 +270,45 @@ async function cargarHistorial() {
 }
 
 function irA(s) {
+  if (!esAdmin()) s = "cerrar";   // una moza solo ve el cierre de su turno
   sec = s;
   document.querySelectorAll("[data-cj]").forEach((x) => (x.hidden = x.dataset.cj !== s));
   document.querySelectorAll("[data-cj-btn]").forEach((b) => b.classList.toggle("activa", b.dataset.cjBtn === s));
-  if (s === "historial") cargarHistorial(); else cargarTurno();
+  if (s === "historial") cargarHistorial();
+  else if (s === "personal") cargarPersonal();
+  else cargarTurno();
+}
+
+// ====== PERSONAL (solo administrador): quién cierra cada turno ======
+async function cargarPersonal() {
+  const { data, error } = await db.rpc("listar_personal");
+  if (error) return errorFalta(error);
+  $("#cjError").textContent = "";
+  const gente = (data || []).filter((p) => p.rol !== "admin");
+  const opciones = (actual) => [["", "Sin turno asignado"], ...TURNOS.map((t) => [t.id, `${t.nombre} (${t.desde} a ${t.hasta})`])]
+    .map(([v, n]) => `<option value="${v}"${(actual || "") === v ? " selected" : ""}>${n}</option>`).join("");
+  $("#cjPersonal").innerHTML = gente.length
+    ? gente.map((p) => `<div class="item"><div>${esc(p.nombre || "Sin nombre")}<small>${esc(p.rol)}</small></div>
+        <div><select data-cj-persona="${esc(p.id)}">${opciones(p.turno_caja)}</select></div></div>`).join("")
+    : '<p class="vacio">No hay otras personas cargadas todavía.</p>';
+}
+
+async function asignarTurno(id, turno) {
+  const { error } = await db.rpc("asignar_turno_caja", { p_usuario: id, p_turno: turno });
+  if (error) return aviso("No se pudo guardar: " + error.message, 5000);
+  aviso(turno ? `Asignado: ${nombreTurno(turno)}` : "Turno quitado");
+}
+
+// Ajusta la pantalla según quién entra
+function aplicarPermisos() {
+  const admin = esAdmin();
+  document.querySelectorAll('[data-cj-btn="historial"], [data-cj-btn="personal"]').forEach((b) => (b.hidden = !admin));
+  $("#cjFecha").disabled = !admin;
+  $("#cjTurno").disabled = !admin;
+  if (!admin && yo.turno) {
+    $("#cjFecha").value = diaDeTurno(new Date().toISOString());
+    $("#cjTurno").value = yo.turno;
+  }
 }
 
 // ====== ARRANQUE ======
@@ -269,9 +322,14 @@ export async function initCaja() {
     enganchar();
     const { data: { user } } = await db.auth.getUser();
     if (user) {
-      const { data: p } = await db.from("perfiles").select("nombre, rol").eq("id", user.id).maybeSingle();
-      if (p) { yo.rol = p.rol; if (!yo.nombre) yo.nombre = p.nombre || ""; }
+      const { data: p } = await db.from("perfiles").select("nombre, rol, turno_caja").eq("id", user.id).maybeSingle();
+      if (p) { yo.rol = p.rol; yo.turno = p.turno_caja || ""; if (!yo.nombre) yo.nombre = p.nombre || ""; }
     }
+  }
+  aplicarPermisos();
+  if (!esAdmin() && !yo.turno) {
+    $("#cjCont").innerHTML = '<p class="vacio">Todavía no tenés un turno de caja asignado. Pedile al administrador que te lo asigne.</p>';
+    return;
   }
   irA(sec);
 }
@@ -284,6 +342,7 @@ function enganchar() {
     if ((el = t.closest("[data-cj-btn]"))) return irA(el.dataset.cjBtn);
     if (t.closest("#cjCerrar")) return cerrarTurno();
     if (t.closest("#cjReabrir")) return reabrir();
+    if ((el = t.closest("[data-cj-pago]"))) return cambiarPago(el.dataset.cjPago);
     if ((el = t.closest("[data-cj-abrir]"))) {
       const [f, tn] = el.dataset.cjAbrir.split("|");
       $("#cjFecha").value = f; $("#cjTurno").value = tn;
@@ -295,6 +354,10 @@ function enganchar() {
     if (el && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); el.click(); }
   });
   raiz.addEventListener("input", (e) => { if (e.target.closest("#cjCont")) pintarDif(); });
+  raiz.addEventListener("change", (e) => {
+    const sel = e.target.closest("[data-cj-persona]");
+    if (sel) asignarTurno(sel.dataset.cjPersona, sel.value);
+  });
   $("#cjFecha").addEventListener("change", cargarTurno);
   $("#cjTurno").addEventListener("change", cargarTurno);
 }

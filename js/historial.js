@@ -81,7 +81,7 @@ function verTicket(id) {
     </div>
     <div id="histPagoBox" class="cierre no-print" hidden>
       <label>Nueva forma de pago <select id="histPagoNuevo">${MEDIOS.map((m) => `<option${m === f.medio_pago ? " selected" : ""}>${m}</option>`).join("")}</select></label>
-      <p class="nota" style="margin-top:0">Si pasa a efectivo se aplica el 10% de descuento; si sale de efectivo, se quita. Solo lo puede hacer un administrador.</p>
+      <p class="nota" style="margin-top:0">Si pasa a efectivo se aplica el 10% de descuento; si sale de efectivo, se quita. Queda anotado quién hizo el cambio.</p>
       <div class="fila"><button class="principal" id="histPagoOk" data-id="${f.id}">Guardar cambio</button><button class="link" id="histPagoNo">Cancelar</button></div>
     </div>
     <div id="histAnularBox" class="cierre no-print" hidden>
