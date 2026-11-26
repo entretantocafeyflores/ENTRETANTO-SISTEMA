@@ -409,6 +409,7 @@
         <div class="chips">
           <button class="chip" data-cj-btn="cerrar">Cerrar turno</button>
           <button class="chip" data-cj-btn="historial">Cierres anteriores</button>
+          <button class="chip" data-cj-btn="personal">Quién cierra cada turno</button>
         </div>
         <p id="cjError" class="error" role="alert"></p>
       </section>
@@ -420,6 +421,11 @@
         </div>
         <p class="nota" style="margin-top:0">El día va de 8:30 a 8:30: lo que se cierra después de las 00:00 cuenta en la noche del día anterior.</p>
         <div id="cjCont"></div>
+      </section>
+      <section class="panel" data-cj="personal" hidden>
+        <h2>Quién cierra cada turno</h2>
+        <p class="nota" style="margin-top:0">Cada persona solo puede cerrar y ver <b>su</b> turno de hoy. No ve los cierres de los otros turnos ni los anteriores. Vos, como administradora, ves todo.</p>
+        <div id="cjPersonal" class="lista-est co-lista"></div>
       </section>
       <section class="panel" data-cj="historial" hidden>
         <h2>Cierres anteriores</h2>
