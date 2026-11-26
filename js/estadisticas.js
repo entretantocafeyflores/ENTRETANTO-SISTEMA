@@ -11,6 +11,22 @@ const TZ = "America/Argentina/Buenos_Aires";
 const TURNOS = ["Desayuno", "Almuerzo", "Merienda", "Noche"];
 let filas = [], agg = null, iniciado = false;
 
+// Las estadísticas muestran 3 medios: Efectivo, Transferencia y Posnet.
+// Posnet junta lo que antes se anotaba como Débito, Crédito y QR (tickets viejos incluidos).
+const ORDEN_MEDIOS = ["Efectivo", "Transferencia", "Posnet"];
+const grupoMedio = (m) => {
+  const t = sinTildes(m || "").trim();
+  if (!t) return "Sin dato";
+  if (t === "efectivo") return "Efectivo";
+  if (t === "transferencia") return "Transferencia";
+  if (/posnet|postnet|debito|credito|qr/.test(t)) return "Posnet";
+  return m;
+};
+const mediosOrdenados = (medios) => [
+  ...ORDEN_MEDIOS.map((n) => [n, medios[n] || { mesas: 0, ventas: 0 }]),
+  ...Object.entries(medios).filter(([n]) => !ORDEN_MEDIOS.includes(n)).sort((a, b) => b[1].ventas - a[1].ventas),
+];
+
 const hoyAR = () => new Date().toLocaleDateString("en-CA", { timeZone: TZ });
 export const sumarDias = (f, n) => { const d = new Date(f + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const diaDe = (iso) => new Date(iso).toLocaleDateString("en-CA", { timeZone: TZ });
@@ -74,7 +90,7 @@ function dibujar() {
     const d = (dias[diaDe(f.cerrada_at)] ||= { com: 0, ventas: 0, t: {} });
     const tn = turnoDe(f.abierta_at);
     d.com += f.comensales || 0; d.ventas += Number(f.total || 0); d.t[tn] = (d.t[tn] || 0) + (f.comensales || 0);
-    const m = (medios[f.medio_pago || "Sin dato"] ||= { mesas: 0, ventas: 0 });
+    const m = (medios[grupoMedio(f.medio_pago)] ||= { mesas: 0, ventas: 0 });
     m.mesas++; m.ventas += Number(f.total || 0);
     (f.comanda_items || []).forEach((i) => {
       const p = (prods[i.nombre] ||= { cant: 0, ventas: 0 });
@@ -91,8 +107,10 @@ function dibujar() {
   lista("#estDias", Object.keys(dias).sort().map((d) =>
     fila(fechaLinda(d), TURNOS.filter((t) => dias[d].t[t]).map((t) => `${t} ${dias[d].t[t]}`).join(" · ") || "Sin comensales cargados", num(dias[d].com))), sin);
 
-  lista("#estMedios", Object.entries(medios).sort((a, b) => b[1].ventas - a[1].ventas).map(([n, m]) =>
-    fila(n, `${m.mesas} mesas`, plata(m.ventas))), sin);
+  lista("#estMedios", filas.length ? [
+    ...mediosOrdenados(medios).map(([n, m]) => fila(n, `${m.mesas} ${m.mesas === 1 ? "mesa" : "mesas"}`, plata(m.ventas))),
+    fila("Total caja", `${filas.length} ${filas.length === 1 ? "mesa" : "mesas"} · lo cobrado en el período`, plata(ventas)),
+  ] : [], sin);
 
   const q = sinTildes($("#estBuscar").value.trim());
   let ps = Object.entries(prods).sort((a, b) => b[1].cant - a[1].cant);
@@ -132,7 +150,8 @@ function excel() {
     ...Object.keys(agg.dias).sort().map((d) => [fechaLinda(d), ...TURNOS.map((t) => agg.dias[d].t[t] || 0), agg.dias[d].com, agg.dias[d].ventas])],
     [18, 12, 12, 12, 12, 12, 14]);
   hoja("Medios de pago", [["Medio", "Mesas", "Ventas"],
-    ...Object.entries(agg.medios).sort((a, b) => b[1].ventas - a[1].ventas).map(([n, m]) => [n, m.mesas, m.ventas])], [22, 10, 14]);
+    ...mediosOrdenados(agg.medios).map(([n, m]) => [n, m.mesas, m.ventas]),
+    ["Total caja", agg.n, agg.ventas]], [22, 10, 14]);
   hoja("Productos", [["Producto", "Unidades", "Ventas"],
     ...Object.entries(agg.prods).sort((a, b) => b[1].cant - a[1].cant).map(([n, p]) => [n, p.cant, p.ventas])], [36, 10, 14]);
   X.writeFile(wb, `entretanto-estadisticas-${agg.desde}_a_${agg.hasta}.xlsx`);
