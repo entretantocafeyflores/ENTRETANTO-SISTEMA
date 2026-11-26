@@ -7,6 +7,7 @@ import { initBackup } from "./backup.js";
 import { initCompras, actualizarAlertas } from "./compras.js";
 import { initGastos, actualizarAlertasGastos } from "./gastos.js";
 import { initPresupuestos } from "./presupuestos.js";
+import { initCaja } from "./caja.js";
 
 const $ = (s) => document.querySelector(s);
 
@@ -21,6 +22,7 @@ const MODULOS = [
   { id: "productos",    nombre: "Productos",    init: initProductos },
   { id: "mesas",        nombre: "Mesas",        init: initMesas },
   { id: "historial",    nombre: "Historial",    init: initHistorial },
+  { id: "caja",         nombre: "Caja",         init: initCaja },
   { id: "compras",      nombre: "Compras",      init: initCompras },
   { id: "gastos",       nombre: "Gastos",       init: initGastos },
   { id: "presupuestos", nombre: "Presupuestos", init: initPresupuestos },

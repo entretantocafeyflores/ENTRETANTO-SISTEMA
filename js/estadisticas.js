@@ -1,5 +1,6 @@
 import { db } from "./db.js";
 import { imprimirNormal } from "./impresion.js";
+import { grupoMedio, ORDEN_MEDIOS, TURNOS as TURNOS_CAFE, turnoDe, diaDeTurno, INICIO_DIA } from "./medios.js";
 
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -8,20 +9,9 @@ const num = (n) => Number(n).toLocaleString("es-AR", { maximumFractionDigits: 2 
 const sinTildes = (t) => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 const TZ = "America/Argentina/Buenos_Aires";
-const TURNOS = ["Desayuno", "Almuerzo", "Merienda", "Noche"];
+const TURNOS = TURNOS_CAFE.map((t) => t.nombre);   // Mañana, Tarde, Noche (horarios en js/medios.js)
 let filas = [], agg = null, iniciado = false;
 
-// Las estadísticas muestran 3 medios: Efectivo, Transferencia y Posnet.
-// Posnet junta lo que antes se anotaba como Débito, Crédito y QR (tickets viejos incluidos).
-const ORDEN_MEDIOS = ["Efectivo", "Transferencia", "Posnet"];
-const grupoMedio = (m) => {
-  const t = sinTildes(m || "").trim();
-  if (!t) return "Sin dato";
-  if (t === "efectivo") return "Efectivo";
-  if (t === "transferencia") return "Transferencia";
-  if (/posnet|postnet|debito|credito|qr/.test(t)) return "Posnet";
-  return m;
-};
 const mediosOrdenados = (medios) => [
   ...ORDEN_MEDIOS.map((n) => [n, medios[n] || { mesas: 0, ventas: 0 }]),
   ...Object.entries(medios).filter(([n]) => !ORDEN_MEDIOS.includes(n)).sort((a, b) => b[1].ventas - a[1].ventas),
@@ -30,10 +20,6 @@ const mediosOrdenados = (medios) => [
 const hoyAR = () => new Date().toLocaleDateString("en-CA", { timeZone: TZ });
 export const sumarDias = (f, n) => { const d = new Date(f + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const diaDe = (iso) => new Date(iso).toLocaleDateString("en-CA", { timeZone: TZ });
-const turnoDe = (iso) => {
-  const h = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: TZ }).format(new Date(iso)));
-  return h < 12 ? "Desayuno" : h < 16 ? "Almuerzo" : h < 20 ? "Merienda" : "Noche";
-};
 const fechaLinda = (f) => new Date(f + "T12:00:00Z").toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 
 export function periodo(tipo) {
@@ -54,7 +40,7 @@ async function cargar() {
     const { data, error } = await db.from("comandas")
       .select("id, abierta_at, cerrada_at, total, comensales, medio_pago, comanda_items(nombre, cantidad, precio_unitario)")
       .eq("estado", "cerrada").is("anulada_at", null)
-      .gte("cerrada_at", `${desde}T00:00:00-03:00`).lt("cerrada_at", `${sumarDias(hasta, 1)}T00:00:00-03:00`)
+      .gte("cerrada_at", `${desde}T${INICIO_DIA}:00-03:00`).lt("cerrada_at", `${sumarDias(hasta, 1)}T${INICIO_DIA}:00-03:00`)
       .order("cerrada_at").range(pag * 1000, pag * 1000 + 999);
     if (error) { $("#estError").textContent = "No se pudieron leer las ventas: " + error.message; return; }
     filas = filas.concat(data);
@@ -82,13 +68,15 @@ function dibujar() {
     fila("Gasto por comensal", "Ventas ÷ comensales", comen ? plata(ventas / comen) : "–"),
   ] : [], sin);
 
-  const turnos = Object.fromEntries(TURNOS.map((t) => [t, { mesas: 0, com: 0, ventas: 0 }]));
+  const turnos = Object.fromEntries(TURNOS.map((t) => [t, { mesas: 0, com: 0, ventas: 0, medios: {} }]));
   const dias = {}, medios = {}, prods = {};
   filas.forEach((f) => {
-    const t = turnos[turnoDe(f.abierta_at)];
+    const t = turnos[turnoDe(f.cerrada_at)];
     t.mesas++; t.com += f.comensales || 0; t.ventas += Number(f.total || 0);
-    const d = (dias[diaDe(f.cerrada_at)] ||= { com: 0, ventas: 0, t: {} });
-    const tn = turnoDe(f.abierta_at);
+    const gm = grupoMedio(f.medio_pago);
+    t.medios[gm] = (t.medios[gm] || 0) + Number(f.total || 0);
+    const d = (dias[diaDeTurno(f.cerrada_at)] ||= { com: 0, ventas: 0, t: {} });
+    const tn = turnoDe(f.cerrada_at);
     d.com += f.comensales || 0; d.ventas += Number(f.total || 0); d.t[tn] = (d.t[tn] || 0) + (f.comensales || 0);
     const m = (medios[grupoMedio(f.medio_pago)] ||= { mesas: 0, ventas: 0 });
     m.mesas++; m.ventas += Number(f.total || 0);
@@ -102,7 +90,7 @@ function dibujar() {
   $("#estPeriodoPrint").textContent = `Del ${fechaLinda(agg.desde)} al ${fechaLinda(agg.hasta)}`;
 
   lista("#estTurnos", filas.length ? TURNOS.map((t) =>
-    fila(t, `${turnos[t].mesas} mesas · ${plata(turnos[t].ventas)}`, num(turnos[t].com))) : [], sin);
+    fila(t, `${turnos[t].mesas} mesas · ${plata(turnos[t].ventas)}<br>${ORDEN_MEDIOS.map((n) => `${n} ${plata(turnos[t].medios[n] || 0)}`).join(" · ")}`, num(turnos[t].com))) : [], sin);
 
   lista("#estDias", Object.keys(dias).sort().map((d) =>
     fila(fechaLinda(d), TURNOS.filter((t) => dias[d].t[t]).map((t) => `${t} ${dias[d].t[t]}`).join(" · ") || "Sin comensales cargados", num(dias[d].com))), sin);
@@ -144,8 +132,8 @@ function excel() {
     ["Ventas", agg.ventas], ["Mesas cerradas", agg.n], ["Comensales", agg.comen],
     ["Ticket promedio", agg.ventas / agg.n], ["Gasto por comensal", agg.comen ? agg.ventas / agg.comen : ""],
   ], [22, 30]);
-  hoja("Turnos", [["Turno", "Mesas", "Comensales", "Ventas"],
-    ...TURNOS.map((t) => [t, agg.turnos[t].mesas, agg.turnos[t].com, agg.turnos[t].ventas])], [14, 10, 12, 14]);
+  hoja("Turnos", [["Turno", "Mesas", "Comensales", "Ventas", ...ORDEN_MEDIOS],
+    ...TURNOS.map((t) => [t, agg.turnos[t].mesas, agg.turnos[t].com, agg.turnos[t].ventas, ...ORDEN_MEDIOS.map((n) => agg.turnos[t].medios[n] || 0)])], [14, 10, 12, 14, 14, 14, 14]);
   hoja("Días", [["Fecha", ...TURNOS, "Comensales", "Ventas"],
     ...Object.keys(agg.dias).sort().map((d) => [fechaLinda(d), ...TURNOS.map((t) => agg.dias[d].t[t] || 0), agg.dias[d].com, agg.dias[d].ventas])],
     [18, 12, 12, 12, 12, 12, 14]);
